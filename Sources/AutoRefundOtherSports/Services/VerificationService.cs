@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
-using AutoRefundOtherSports.Exceptions;
+﻿using AutoRefundOtherSports.Exceptions;
 using AutoRefundOtherSports.Models;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace AutoRefundOtherSports.Services

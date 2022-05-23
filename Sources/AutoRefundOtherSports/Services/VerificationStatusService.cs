@@ -69,7 +69,7 @@ namespace AutoRefundOtherSports.Services
             if (criteria.IsExistMarkedTicket)
             {
                 throw new TicketExclusionException();
-            };
+            }
         }
 
         public async Task CheckTicketSettled(Match match)
@@ -81,7 +81,7 @@ namespace AutoRefundOtherSports.Services
             if (criteria.ErrCode > 0)
             {
                 throw new TicketSettledException();
-            };
+            }
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using AutoRefundOtherSports.Criteria;
+﻿using AutoRefundOtherSports.Criteria;
 using AutoRefundOtherSports.Models;
 using Fanex.Caching;
 using Fanex.Data.Repository;

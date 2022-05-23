@@ -2,14 +2,15 @@
 using AutoRefundOtherSports.Models;
 using Fanex.Data.Repository;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace AutoRefundOtherSports.Services
 {
     public interface ILoggingService
     {
-        void WriteLog(Match match, string message);
+        Task WriteLog(Match match, string message);
 
-        void WriteLog(Match match, AutoRefundException exception);
+        Task WriteLog(Match match, AutoRefundException exception);
     }
 
     public class LoggingServiceImp : ILoggingService
@@ -21,19 +22,19 @@ namespace AutoRefundOtherSports.Services
             this.repository = repository;
         }
 
-        public void WriteLog(Match match, string message)
+        public async Task WriteLog(Match match, string message)
         {
             var errorMessage = GenerateErrorLogMessage(match, message);
             var criteria = new WriteLogCriteria(match, errorMessage);
-            repository.Execute(criteria);
+            await repository.ExecuteAsync(criteria);
         }
 
-        public void WriteLog(Match match, AutoRefundException exception)
+        public async Task WriteLog(Match match, AutoRefundException exception)
         {
             var message = exception.Description ?? "Auto Refund failed due to system error.";
             var errorMessage = GenerateErrorLogMessage(match, message);
             var criteria = new WriteLogCriteria(match, errorMessage);
-            repository.Execute(criteria);
+            await repository.ExecuteAsync(criteria);
         }
 
         private static string GenerateErrorLogMessage(Match match, string message)

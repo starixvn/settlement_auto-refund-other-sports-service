@@ -1,14 +1,12 @@
 ﻿using AutoRefundOtherSports.Models;
-using Fanex.Caching;
 using Microsoft.Extensions.Options;
-using System;
 using System.Threading.Tasks;
 
 namespace AutoRefundOtherSports.Services
 {
     public interface IRefundController
     {
-        void Process(Match match);
+        Task Process(Match match);
     }
 
     public class RefundControllerImp : IRefundController
@@ -27,27 +25,21 @@ namespace AutoRefundOtherSports.Services
 
         private readonly AppSettingsKey appSettingsKey;
 
-        private const int DeploymentError = 99;
-
-        private readonly ICache cache;
-
         public RefundControllerImp(
             IMatchService matchService,
             IVerificationService verificationService,
             IMatchPoolService matchPoolService,
             ILoggingService loggingService,
-            IOptions<AppSettingsKey> appSettingsKey,
-            ICache cache)
+            IOptions<AppSettingsKey> appSettingsKey)
         {
             this.matchService = matchService;
             this.verificationService = verificationService;
             this.matchPoolService = matchPoolService;
             this.loggingService = loggingService;
-            this.cache = cache;
             this.appSettingsKey = appSettingsKey.Value;
         }
 
-        public async void Process(Match match)
+        public async Task Process(Match match)
         {
             var started = true;
             var retryCount = 0;
@@ -59,7 +51,7 @@ namespace AutoRefundOtherSports.Services
                     await verificationService.VerifyResultRunning(match, retryCount);
                     await verificationService.VerifyResultStatus(match);
                     var result = await matchService.Push(match);
-                    ProcessAfterRefund(match, result);
+                    await ProcessAfterRefund(match, result);
                     started = false;
                 }
                 catch (AutoRefundException exception)
@@ -70,28 +62,28 @@ namespace AutoRefundOtherSports.Services
                     }
                     else
                     {
-                        HandleAutoRefundException(match, exception);
+                        await HandleAutoRefundException(match, exception);
                         started = false;
                     }
                 }
             }
         }
 
-        private void HandleAutoRefundException(Match match, AutoRefundException exception)
+        private async Task HandleAutoRefundException(Match match, AutoRefundException exception)
         {
-            loggingService.WriteLog(match, exception);
-            matchService.Update(match, exception.Description, Failed);
+            await loggingService.WriteLog(match, exception);
+            await matchService.Update(match, exception.Description, Failed);
             matchPoolService.RemoveMatch(match);
         }
 
-        private void ProcessAfterRefund(Match match, Result result)
+        private async Task ProcessAfterRefund(Match match, Result result)
         {
             if (!result.IsSuccessful)
             {
-                loggingService.WriteLog(match, result.ErrMsg);
-                matchService.Update(match, result.ErrMsg, Failed);
-                matchPoolService.RemoveMatch(match);
+                await loggingService.WriteLog(match, result.ErrMsg);
+                await matchService.Update(match, result.ErrMsg, Failed);
             }
+            matchPoolService.RemoveMatch(match);
         }
 
         private async Task<int> ProcessWhenCachedException(int retryCount, Match match, AutoRefundException exception)
@@ -99,9 +91,7 @@ namespace AutoRefundOtherSports.Services
             await matchService.Update(match, exception.Description, Running);
             if (retryCount >= appSettingsKey.RetryCount)
             {
-                Console.WriteLine(DateTime.Now);
-                HandleAutoRefundException(match, exception);
-                matchPoolService.RemoveMatch(match);
+                await HandleAutoRefundException(match, exception);
             }
             else
             {
