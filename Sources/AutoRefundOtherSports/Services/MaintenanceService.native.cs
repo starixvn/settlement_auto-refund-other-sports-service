@@ -35,7 +35,17 @@ namespace AutoRefundOtherSports.Services
 
                 var downTime = maintenanceService.GetUnderMaintenanceTime();
 
-                return downTime.IsUnderMaintenanceTime;
+                return downTime.IsUnderMaintenanceTime || IsDeploySPName;
+            }
+        }
+
+        private bool IsDeploySPName
+        {
+            get
+            {
+                cache.TryGet(appSettingsKey.DeploymentSpName, out int flagDeployment);
+
+                return flagDeployment > 0;
             }
         }
     }

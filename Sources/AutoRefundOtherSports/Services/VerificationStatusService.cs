@@ -9,8 +9,6 @@ namespace AutoRefundOtherSports.Services
 {
     public interface IVerificationStatusService
     {
-        Task CheckMarkedResult(Match match);
-
         Task CheckRunningOdds(Match match);
 
         Task CheckTicketExclusion(Match match);
@@ -30,18 +28,6 @@ namespace AutoRefundOtherSports.Services
         {
             this.createQueryService = createQueryService;
             this.repository = repository;
-        }
-
-        public async Task CheckMarkedResult(Match match)
-        {
-            var criteria = createQueryService.CreateQueryCheckResultSetting(match);
-
-            await repository.ExecuteAsync(criteria);
-
-            if (criteria.ErrCode > 0)
-            {
-                throw new MarkedResultException();
-            }
         }
 
         public async Task CheckRunningOdds(Match match)

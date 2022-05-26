@@ -14,8 +14,6 @@ namespace AutoRefundOtherSports.Services
 
         CheckOddsCriteria CreateQueryCheckOdds(Match match);
 
-        CheckResultSettingCriteria CreateQueryCheckResultSetting(Match match);
-
         TicketCheckingCriteria CreateQueryCheckTicketRunning(Match match);
     }
 
@@ -62,15 +60,6 @@ namespace AutoRefundOtherSports.Services
             };
         }
 
-        public CheckResultSettingCriteria CreateQueryCheckResultSetting(Match match)
-        {
-            return new CheckResultSettingCriteria
-            {
-                MatchId = match.MatchId,
-                SelectedResources = CreateResource(match.ResultDetails)
-            };
-        }
-
         public CheckOddsCriteria CreateQueryCheckOdds(Match match)
         {
             return new CheckOddsCriteria
@@ -88,17 +77,6 @@ namespace AutoRefundOtherSports.Services
                 TypeId = match.TypeId,
                 ResourceIds = string.Join(",", match.ResultDetails.Select(item => item.ResourceId).ToList())
             };
-        }
-
-        private string CreateResource(List<ResultDetail> selectedResources)
-        {
-            var items = selectedResources.Select(item => new ResourceItem(item.ResourceId)).ToList();
-            var resources = new Resources<ResourceItem>
-            {
-                ResourceItems = items
-            };
-
-            return xmlConvertService.Serialize(resources);
         }
 
         private string CreateMatchResources(List<ResultDetail> selectedResources)

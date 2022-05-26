@@ -19,7 +19,7 @@ namespace AutoRefundOtherSports.Criteria
 
         public string IP { get; } = string.Empty;
 
-        public int ActionId { get; } = 100;
+        public int ActionId { get; } = 109;
 
         public int? FinalHomeScore { get; set; }
 

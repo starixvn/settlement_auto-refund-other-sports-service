@@ -42,28 +42,12 @@ namespace AutoRefund.UnitTests.Services
             var match = new Match();
             verificationService.When(fake => fake.VerifyResultRunning(match, 0)).Do(call => { });
             verificationService.When(fake => fake.VerifyResultStatus(match)).Do(call => { });
-            matchService.Push(match).Returns(new Result());
 
             await controller.Process(match);
 
             await matchService.Received().Push(match);
             matchPoolService.Received().RemoveMatch(match);
             await matchService.DidNotReceive().Update(match, Arg.Any<string>(), 3);
-        }
-
-        [Fact]
-        public async Task Process_NoExceptionHaveBeenThrown_PushMatchFailedAndUpdateStatus()
-        {
-            var match = new Match();
-            verificationService.When(fake => fake.VerifyResultRunning(match, 0)).Do(call => { });
-            verificationService.When(fake => fake.VerifyResultStatus(match)).Do(call => { });
-            matchService.Push(match).Returns(new Result { ErrCode = 1, ErrMsg = "Failed" });
-
-            await controller.Process(match);
-
-            await matchService.Received().Push(match);
-            matchPoolService.Received().RemoveMatch(match);
-            await matchService.Received().Update(match, Arg.Any<string>(), 3);
         }
 
         [Fact]

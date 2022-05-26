@@ -42,7 +42,6 @@ namespace AutoRefundOtherSports.Services
 
         public async Task VerifyResultStatus(Match match)
         {
-            await verificationStatusService.CheckMarkedResult(match);
             await verificationStatusService.CheckRunningOdds(match);
             await verificationStatusService.CheckTicketExclusion(match);
         }

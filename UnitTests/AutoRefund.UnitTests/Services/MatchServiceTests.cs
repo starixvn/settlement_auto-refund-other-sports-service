@@ -23,10 +23,15 @@ namespace AutoRefund.UnitTests.Services
 
         private readonly IMatchService service;
 
+        private readonly ILoggingService loggingService;
+
+        private readonly IEnumerable<ResultDetail> resultDetails;
+
         public MatchServiceTests()
         {
             repository = Substitute.For<IDynamicRepository>();
             createQueryService = Substitute.For<ICreateQueryService>();
+            loggingService = Substitute.For<ILoggingService>();
             cache = new RedisCache(new RedisCacheOptions
             {
                 ConnectionString = $"ha.nexdev.net:16379,password=foo1@bared,defaultDatabase=11",
@@ -36,32 +41,69 @@ namespace AutoRefund.UnitTests.Services
             {
                 RetryInterval = 1000,
                 RetryCount = 15,
-                EnvironmentName = "PRO"
+                EnvironmentName = "PRO",
             };
 
             var appSettingsOptions = Options.Create(settings);
 
-            service = new MatchServiceImp(repository, cache, appSettingsOptions, createQueryService);
-        }
-
-        [Fact]
-        public async Task GetMatches_ExistedIncludeLeagueIdAndExcludeLeagueId_ReturnsRightMatches()
-        {
-            IEnumerable<ResultDetail> resultDetails = new List<ResultDetail>
+            resultDetails = new List<ResultDetail>
             {
                 new ResultDetail() { MatchId = 1, LeagueId = 123 },
                 new ResultDetail { MatchId = 2, LeagueId = 1 , ResourceId = "0102"},
                 new ResultDetail() { MatchId = 2, LeagueId = 1, ResourceId = "0101" }
             };
-            repository.FetchAsync<ResultDetail>(Arg.Any<ResultListingCriteria>()).Returns(resultDetails);
+
+            service = new MatchServiceImp(repository, cache, appSettingsOptions, createQueryService, loggingService);
+        }
+
+        private void setLeague(int leagueId)
+        {
             const string KEY_INCLUDE_LEAGUEIDS = "Settlement-AutoPayout-AutoInstant-LeagueId";
             const int CACHE_EXPIRED_IN_DAYS = 1095;
             var cachePolicy = new CacheItemOptions().SetAbsoluteExpiration(TimeSpan.FromDays(CACHE_EXPIRED_IN_DAYS));
-            cache.Set(KEY_INCLUDE_LEAGUEIDS, 123, cachePolicy);
+            cache.Set(KEY_INCLUDE_LEAGUEIDS, leagueId, cachePolicy);
+        }
+
+        [Fact]
+        public async Task GetMatches_ExistedIncludeLeagueIdAndExcludeLeagueId_ReturnsRightMatches()
+        {
+            setLeague(123);
+            repository.FetchAsync<ResultDetail>(Arg.Any<ResultListingCriteria>()).Returns(resultDetails);
 
             var list = await service.GetMatches();
 
-            Assert.Single(list);
+            Assert.Equal(1, list[0].LeagueId);
+        }
+
+        [Fact]
+        public async Task GetMatches_NotExistLeagueTest_ReturnAllMatches()
+        {
+            setLeague(0);
+            repository.FetchAsync<ResultDetail>(Arg.Any<ResultListingCriteria>()).Returns(resultDetails);
+
+            var list = await service.GetMatches();
+
+            Assert.Equal(2, list.Count);
+        }
+
+        [Fact]
+        public async Task GetMatches_ExcludeLeagueIdAndInUAT_ReturnsRightMatches()
+        {
+            var settings = new AppSettingsKey()
+            {
+                EnvironmentName = "UAT"
+            };
+
+            var appSettingsOptions = Options.Create(settings);
+
+            var tempService = new MatchServiceImp(repository, cache, appSettingsOptions, createQueryService, loggingService);
+            setLeague(123);
+
+            repository.FetchAsync<ResultDetail>(Arg.Any<ResultListingCriteria>()).Returns(resultDetails);
+
+            var list = await tempService.GetMatches();
+
+            Assert.Equal(123, list[0].LeagueId);
         }
 
         [Fact]
@@ -87,16 +129,67 @@ namespace AutoRefund.UnitTests.Services
         [Fact]
         public async Task Push_Always_ExecuteCriteria()
         {
-            // Arrange
             var match = new Match { MatchId = 1 };
             createQueryService.QuerySettle(match).Returns(new SettleCriteria());
 
-            // Act
-            var result = await service.Push(match);
+            await service.Push(match);
 
-            // Assert
             await repository.Received().ExecuteAsync(Arg.Any<SettleCriteria>());
-            Assert.NotNull(result);
+        }
+
+        [Fact]
+        public async Task Push_SettleFailed_LogFailedAndUpdateStatus()
+        {
+            var match = new Match();
+            createQueryService.QuerySettle(Arg.Any<Match>()).Returns(new SettleCriteria());
+            createQueryService.QueryUpdateResult(match, Arg.Any<string>(), Arg.Any<int>())
+                .Returns(new UpdateResultStatusCriteria());
+            await repository.ExecuteAsync(Arg.Do<SettleCriteria>(item =>
+            {
+                item.ErrCode = 1;
+                item.ErrMsg = "Error";
+            }));
+
+            await service.Push(match);
+
+            await loggingService.Received().WriteLog(match, "Error");
+            createQueryService.Received().QueryUpdateResult(match, Arg.Any<string>(), 3);
+        }
+
+        [Fact]
+        public async Task Push_SettledSuccess_ExecutePushHedgeMatch()
+        {
+            var match = new Match { MatchId = 1 };
+            createQueryService.QuerySettle(match).Returns(new SettleCriteria());
+            repository.GetAsync<HedgeMatchDetail>(Arg.Any<GetHedgeMatchCriteria>()).Returns(new HedgeMatchDetail { MatchId = 2 });
+
+            await service.Push(match);
+
+            await repository.Received(2).ExecuteAsync(Arg.Any<SettleCriteria>());
+        }
+
+        [Fact]
+        public async Task Push_ReturnDeployError_SetCache()
+        {
+            var settings = new AppSettingsKey()
+            {
+                DeploymentDelay = "2",
+                DeploymentSpName = "Deploy"
+            };
+
+            var appSettingsOptions = Options.Create(settings);
+            ICache tempCache = Substitute.For<ICache>();
+            var newService = new MatchServiceImp(repository, tempCache, appSettingsOptions, createQueryService, loggingService);
+            var match = new Match { MatchId = 1 };
+            createQueryService.QuerySettle(match).Returns(new SettleCriteria());
+            await repository.ExecuteAsync(Arg.Do<SettleCriteria>(item =>
+            {
+                item.ErrCode = 99;
+            }));
+
+            await newService.Push(match);
+
+            tempCache.Received().Set("Deploy", 1, Arg.Any<CacheItemOptions>());
         }
     }
 }

@@ -26,19 +26,6 @@ namespace AutoRefund.UnitTests.Services
         }
 
         [Fact]
-        public async Task CheckMarkedResult_ResultMarked_ThrowException()
-        {
-            var criteria = new CheckResultSettingCriteria();
-            createQueryService.CreateQueryCheckResultSetting(Arg.Any<Match>()).Returns(criteria);
-            repository.When(fake => fake.ExecuteAsync(criteria)).Do(call =>
-            {
-                criteria.ErrCode = 1;
-            });
-
-            await Assert.ThrowsAsync<MarkedResultException>(() => service.CheckMarkedResult(new Match()));
-        }
-
-        [Fact]
         public async Task CheckRunningOdds_RunningOdds_ThrowException()
         {
             var criteria = new CheckOddsCriteria();

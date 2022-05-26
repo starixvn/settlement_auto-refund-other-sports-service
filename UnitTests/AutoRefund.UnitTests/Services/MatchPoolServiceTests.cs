@@ -49,7 +49,7 @@ namespace AutoRefund.UnitTests.Services
             serviceMock.RemoveMatch(matches[0]);
 
             // Assert
-            Assert.Single(serviceMock.PoolOfMatches);
+            Assert.Equal(2, serviceMock.PoolOfMatches[0].MatchId);
         }
     }
 }

@@ -48,27 +48,14 @@ namespace AutoRefund.UnitTests.Services
         }
 
         [Fact]
-        public void CreateQueryCheckResultSetting_Always_ReturnsExpectedData()
-        {
-            var criteria = new CheckResultSettingCriteria
-            {
-                MatchId = 1,
-                SelectedResources = "<Resources><Resource Id=\"0101\" /></Resources>"
-            };
-
-            var result = service.CreateQueryCheckResultSetting(match);
-
-            Assert.Equal(JsonConvert.SerializeObject(result), JsonConvert.SerializeObject(criteria));
-        }
-
-        [Fact]
         public void QueryUpdateResult_Always_ReturnsExpectedData()
         {
             match.TypeId = 1;
+            match.ResultDetails.Add(new ResultDetail { ResourceId = "0102" });
             var criteria = new UpdateResultStatusCriteria
             {
                 MatchId = 1,
-                ResourceIds = "0101",
+                ResourceIds = "0101,0102",
                 StatusId = 1,
                 TypeId = 1,
                 Remark = "123"
@@ -96,10 +83,11 @@ namespace AutoRefund.UnitTests.Services
         public void CreateQueryCheckTicketRunning_Always_ReturnsExpectedData()
         {
             match.TypeId = 1;
+            match.ResultDetails.Add(new ResultDetail { ResourceId = "0102" });
             var criteria = new TicketCheckingCriteria
             {
                 MatchId = 1,
-                ResourceIds = "0101",
+                ResourceIds = "0101,0102",
                 TypeId = 1,
             };
 

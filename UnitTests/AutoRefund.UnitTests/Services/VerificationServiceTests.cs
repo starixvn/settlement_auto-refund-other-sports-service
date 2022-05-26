@@ -60,13 +60,11 @@ namespace AutoRefund.UnitTests.Services
         public async Task VerifyResultRunning_NoExceptionExist_CallRelatedMethods()
         {
             var match = new Match();
-            verificationStatusService.When(fake => fake.CheckMarkedResult(match)).Do(call => { });
             verificationStatusService.When(fake => fake.CheckRunningOdds(match)).Do(call => { });
             verificationStatusService.When(fake => fake.CheckTicketExclusion(match)).Do(call => { });
 
             await service.VerifyResultStatus(match);
 
-            await verificationStatusService.Received().CheckMarkedResult(match);
             await verificationStatusService.Received().CheckRunningOdds(match);
             await verificationStatusService.Received().CheckTicketExclusion(match);
         }

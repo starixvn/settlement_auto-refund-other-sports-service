@@ -12,8 +12,6 @@ namespace AutoRefundOtherSports.Models
 
         public List<ResultDetail> ResultDetails { get; set; }
 
-        public bool IsHedgeMatch { get; set; }
-
         public override bool Equals(object obj)
         {
             return obj != null

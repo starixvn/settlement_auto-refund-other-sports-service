@@ -11,10 +11,6 @@ namespace AutoRefundOtherSports.Services
 
     public class RefundControllerImp : IRefundController
     {
-        private const int Failed = 3;
-
-        private const int Running = 1;
-
         private readonly IMatchService matchService;
 
         private readonly IVerificationService verificationService;
@@ -41,18 +37,17 @@ namespace AutoRefundOtherSports.Services
 
         public async Task Process(Match match)
         {
-            var started = true;
+            var running = true;
             var retryCount = 0;
-            await matchService.Update(match, "", Running);
-            while (started && retryCount < appSettingsKey.RetryCount + 1)
+            await matchService.Update(match, "", MatchStatus.Running);
+            while (running && retryCount < appSettingsKey.RetryCount + 1)
             {
                 try
                 {
                     await verificationService.VerifyResultRunning(match, retryCount);
                     await verificationService.VerifyResultStatus(match);
-                    var result = await matchService.Push(match);
-                    await ProcessAfterRefund(match, result);
-                    started = false;
+                    await matchService.Push(match);
+                    running = false;
                 }
                 catch (AutoRefundException exception)
                 {
@@ -63,8 +58,12 @@ namespace AutoRefundOtherSports.Services
                     else
                     {
                         await HandleAutoRefundException(match, exception);
-                        started = false;
+                        running = false;
                     }
+                }
+                finally
+                {
+                    matchPoolService.RemoveMatch(match);
                 }
             }
         }
@@ -72,29 +71,18 @@ namespace AutoRefundOtherSports.Services
         private async Task HandleAutoRefundException(Match match, AutoRefundException exception)
         {
             await loggingService.WriteLog(match, exception);
-            await matchService.Update(match, exception.Description, Failed);
-            matchPoolService.RemoveMatch(match);
-        }
-
-        private async Task ProcessAfterRefund(Match match, Result result)
-        {
-            if (!result.IsSuccessful)
-            {
-                await loggingService.WriteLog(match, result.ErrMsg);
-                await matchService.Update(match, result.ErrMsg, Failed);
-            }
-            matchPoolService.RemoveMatch(match);
+            await matchService.Update(match, exception.Description, MatchStatus.Failed);
         }
 
         private async Task<int> ProcessWhenCachedException(int retryCount, Match match, AutoRefundException exception)
         {
-            await matchService.Update(match, exception.Description, Running);
             if (retryCount >= appSettingsKey.RetryCount)
             {
                 await HandleAutoRefundException(match, exception);
             }
             else
             {
+                await matchService.Update(match, exception.Description, MatchStatus.Running);
                 await Task.Delay(appSettingsKey.RetryInterval);
             }
 
