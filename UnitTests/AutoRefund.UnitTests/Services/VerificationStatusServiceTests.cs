@@ -6,6 +6,7 @@ using Fanex.Data.Repository;
 using NSubstitute;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AutoRefundOtherSports;
 using Xunit;
 
 namespace AutoRefund.UnitTests.Services
@@ -35,7 +36,7 @@ namespace AutoRefund.UnitTests.Services
                 criteria.ErrCode = 1;
             });
 
-            await Assert.ThrowsAsync<RunningOddsException>(() => service.CheckRunningOdds(new Match()));
+            await Assert.ThrowsAsync<AutoRefundException>(() => service.CheckRunningOdds(new Match()));
         }
 
         [Fact]
@@ -62,7 +63,7 @@ namespace AutoRefund.UnitTests.Services
                 criteria.ErrCode = 1;
             });
 
-            await Assert.ThrowsAsync<TicketSettledException>(() => service.CheckTicketSettled(new Match()));
+            await Assert.ThrowsAsync<AutoRefundException>(() => service.CheckTicketSettled(new Match()));
         }
     }
 }

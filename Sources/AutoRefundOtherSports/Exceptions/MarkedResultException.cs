@@ -8,7 +8,7 @@ namespace AutoRefundOtherSports.Exceptions
     {
         public MarkedResultException()
         {
-            Description = "Auto Refund failed: some results have not been marked as Refund.";
+            Description = "ERROR! Some results have not been marked as Refund.";
         }
 
         public MarkedResultException(string message)

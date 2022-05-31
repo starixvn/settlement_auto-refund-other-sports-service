@@ -38,7 +38,7 @@ namespace AutoRefundOtherSports.Services
 
             if (criteria.ErrCode > 0)
             {
-                throw new RunningOddsException();
+                throw new AutoRefundException(criteria.ErrMsg);
             }
         }
 
@@ -66,7 +66,7 @@ namespace AutoRefundOtherSports.Services
 
             if (criteria.ErrCode > 0)
             {
-                throw new TicketSettledException();
+                throw new AutoRefundException { Description = criteria.ErrMsg, StopLoop = true };
             }
         }
     }

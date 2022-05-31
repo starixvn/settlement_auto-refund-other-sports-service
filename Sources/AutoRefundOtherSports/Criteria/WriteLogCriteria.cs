@@ -21,10 +21,6 @@ namespace AutoRefundOtherSports.Criteria
 
         public int ActionId { get; } = 109;
 
-        public int? FinalHomeScore { get; set; }
-
-        public int? FinalAwayScore { get; set; }
-
         public override bool IsValid()
         {
             return MatchId > 0;

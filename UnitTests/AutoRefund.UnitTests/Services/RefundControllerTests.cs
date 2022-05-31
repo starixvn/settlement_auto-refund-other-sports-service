@@ -63,7 +63,7 @@ namespace AutoRefund.UnitTests.Services
             await controller.Process(match);
 
             await matchService.DidNotReceive().Push(match);
-            await matchService.Received(8).Update(Arg.Any<Match>(), Arg.Any<string>(), Arg.Any<int>());
+            await matchService.Received(7).Update(Arg.Any<Match>(), Arg.Any<string>(), Arg.Any<int>());
             await loggingService.Received().WriteLog(match, Arg.Any<AutoRefundException>());
             matchPoolService.Received().RemoveMatch(match);
         }

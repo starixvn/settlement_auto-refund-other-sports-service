@@ -8,7 +8,7 @@ namespace AutoRefundOtherSports.Exceptions
     {
         public TicketExclusionException()
         {
-            Description = "Auto Refund failed: marked tickets exist.";
+            Description = "ERROR! Cannot proceed due to marked tickets. Please unmark them and try again.";
         }
 
         public TicketExclusionException(string message)

@@ -13,6 +13,7 @@ namespace AutoRefundOtherSports
         public AutoRefundException(string message)
             : base(message)
         {
+            Description = message;
         }
 
         public AutoRefundException(string message, Exception innerException)

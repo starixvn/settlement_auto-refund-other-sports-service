@@ -8,7 +8,7 @@ namespace AutoRefundOtherSports.Exceptions
     {
         public SettledException()
         {
-            Description = "Auto Refund failed: some results have been settled already.";
+            Description = "ERROR! Some results have been settled already.";
         }
 
         public SettledException(string message)
