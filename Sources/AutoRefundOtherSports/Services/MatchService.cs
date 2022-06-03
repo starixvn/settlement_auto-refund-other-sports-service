@@ -25,7 +25,7 @@ namespace AutoRefundOtherSports.Services
     {
         private readonly IDynamicRepository repository;
 
-        private const string KeyLeagueId = "Settlement-AutoPayout-AutoInstant-LeagueId";
+        private const string KeyLeagueId = "Settlement-AutoPayoutOtherSport-LeagueId";
 
         private readonly ICache cache;
 
@@ -80,7 +80,7 @@ namespace AutoRefundOtherSports.Services
 
             return matches;
         }
-        
+
         public async Task Update(Match match, string remark, int status)
         {
             var criteria = createQueryService.QueryUpdateResult(match, remark, status);
@@ -93,7 +93,7 @@ namespace AutoRefundOtherSports.Services
             var result = await SettleMatch(match);
             if (result.ErrCode == DeploymentError)
             {
-               await SetFlagDeploySpName();
+                await SetFlagDeploySpName();
             }
             else
             {
@@ -129,7 +129,7 @@ namespace AutoRefundOtherSports.Services
             if (hedgeMatch != null)
             {
                 match.MatchId = hedgeMatch.MatchId;
-                var result =await SettleMatch(match);
+                var result = await SettleMatch(match);
                 if (!result.IsSuccessful)
                 {
                     await loggingService.WriteLog(match, result.ErrMsg);

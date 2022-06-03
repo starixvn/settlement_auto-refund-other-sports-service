@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using NSubstitute;
 using System;
 using System.Collections.Generic;
+using System.Net.WebSockets;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -58,7 +59,7 @@ namespace AutoRefund.UnitTests.Services
 
         private void SetLeague(int leagueId)
         {
-            const string keyIncludeLeagueIds = "Settlement-AutoPayout-AutoInstant-LeagueId";
+            const string keyIncludeLeagueIds = "Settlement-AutoPayoutOtherSport-LeagueId";
             const int cacheExpiredInDays = 1095;
             var cachePolicy = new CacheItemOptions().SetAbsoluteExpiration(TimeSpan.FromDays(cacheExpiredInDays));
             cache.Set(keyIncludeLeagueIds, leagueId, cachePolicy);
@@ -104,6 +105,23 @@ namespace AutoRefund.UnitTests.Services
             var list = await tempService.GetMatches();
 
             Assert.Equal(123, list[0].LeagueId);
+        }
+
+        [Fact]
+        public async Task GetMatches_EnvironmentIsLocal_ReturnsALlMatches()
+        {
+            var settings = new AppSettingsKey()
+            {
+                EnvironmentName = "Local"
+            };
+
+            var appSettingsOptions = Options.Create(settings);
+            var tempService = new MatchServiceImp(repository, cache, appSettingsOptions, createQueryService, loggingService);
+            repository.FetchAsync<ResultDetail>(Arg.Any<ResultListingCriteria>()).Returns(resultDetails);
+
+            var list = await tempService.GetMatches();
+
+            Assert.Equal(2, list.Count);
         }
 
         [Fact]

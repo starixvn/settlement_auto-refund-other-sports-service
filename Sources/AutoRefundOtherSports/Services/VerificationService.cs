@@ -15,7 +15,7 @@ namespace AutoRefundOtherSports.Services
 
     public class VerificationServiceImp : IVerificationService
     {
-        private readonly List<int> resultStatusRunning = new List<int> { 0, 1 };
+        private readonly List<int> resultStatusRunning = new List<int> { 0, 1, 3 };
 
         private readonly IVerificationStatusService verificationStatusService;
 

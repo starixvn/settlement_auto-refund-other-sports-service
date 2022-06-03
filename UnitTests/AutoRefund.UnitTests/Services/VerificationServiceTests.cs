@@ -59,6 +59,22 @@ namespace AutoRefund.UnitTests.Services
         }
 
         [Fact]
+        public async Task VerifyResultRunning_ResultValid_NotThrowException()
+        {
+            var match = new Match
+            {
+                ResultDetails = new List<ResultDetail>
+                {
+                    new ResultDetail { ResultStatusId = 1 }
+                }
+            };
+            verificationStatusService.CheckTicketSettled(match).Returns(new TicketCheckingCriteria { ErrCode = 0 });
+
+            var exception = await Record.ExceptionAsync(() => service.VerifyResultRunning(match, 0));
+            Assert.Null(exception);
+        }
+
+        [Fact]
         public async Task VerifyResultStatus_ExistRunningOdds_ThrowException()
         {
             var match = new Match();
@@ -75,6 +91,17 @@ namespace AutoRefund.UnitTests.Services
             verificationStatusService.CheckTicketExclusion(match).Returns(new CheckMarkedTicketsCriteria { IsExistMarkedTicket = true });
 
             await Assert.ThrowsAsync<TicketExclusionException>(() => service.VerifyResultStatus(match));
+        }
+
+        [Fact]
+        public async Task VerifyResultStatus_ResultValid_NotThrowException()
+        {
+            var match = new Match();
+            verificationStatusService.CheckRunningOdds(match).Returns(new CheckOddsCriteria());
+            verificationStatusService.CheckTicketExclusion(match).Returns(new CheckMarkedTicketsCriteria());
+
+            var exception = await Record.ExceptionAsync(() => service.VerifyResultStatus(match));
+            Assert.Null(exception);
         }
     }
 }

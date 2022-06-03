@@ -6,6 +6,7 @@ using NSubstitute;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace AutoRefund.UnitTests.Services

@@ -67,5 +67,19 @@ namespace AutoRefund.UnitTests.Services
             await loggingService.Received().WriteLog(match, Arg.Any<AutoRefundException>());
             matchPoolService.Received().RemoveMatch(match);
         }
+
+        [Fact]
+        public async Task Process_ThrowExceptionStopLoop_InvokeRelatedMethodsAndStopLoop()
+        {
+            var match = new Match();
+            verificationService.When(fake => fake.VerifyResultRunning(match, 0)).Do(call => { throw new AutoRefundException { StopLoop = true }; });
+
+            await controller.Process(match);
+
+            await matchService.DidNotReceive().Push(match);
+            await matchService.Received(2).Update(Arg.Any<Match>(), Arg.Any<string>(), Arg.Any<int>());
+            await loggingService.Received().WriteLog(match, Arg.Any<AutoRefundException>());
+            matchPoolService.Received().RemoveMatch(match);
+        }
     }
 }
