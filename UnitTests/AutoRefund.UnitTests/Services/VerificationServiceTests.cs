@@ -4,7 +4,9 @@ using AutoRefundOtherSports.Services;
 using NSubstitute;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AutoRefundOtherSports.Criteria;
 using Xunit;
+using AutoRefundOtherSports;
 
 namespace AutoRefund.UnitTests.Services
 {
@@ -42,7 +44,7 @@ namespace AutoRefund.UnitTests.Services
         }
 
         [Fact]
-        public async Task VerifyResultRunning_ResultRunning_CallRelatedMethod()
+        public async Task VerifyResultRunning_ResultRunning_ThrowException()
         {
             var match = new Match
             {
@@ -51,22 +53,28 @@ namespace AutoRefund.UnitTests.Services
                     new ResultDetail { ResultStatusId = 1 }
                 }
             };
-            await service.VerifyResultRunning(match, 0);
+            verificationStatusService.CheckTicketSettled(match).Returns(new TicketCheckingCriteria { ErrCode = 1 });
 
-            await verificationStatusService.Received().CheckTicketSettled(match);
+            await Assert.ThrowsAsync<AutoRefundException>(() => service.VerifyResultRunning(match, 0));
         }
 
         [Fact]
-        public async Task VerifyResultRunning_NoExceptionExist_CallRelatedMethods()
+        public async Task VerifyResultStatus_ExistRunningOdds_ThrowException()
         {
             var match = new Match();
-            verificationStatusService.When(fake => fake.CheckRunningOdds(match)).Do(call => { });
-            verificationStatusService.When(fake => fake.CheckTicketExclusion(match)).Do(call => { });
+            verificationStatusService.CheckRunningOdds(match).Returns(new CheckOddsCriteria { ErrCode = 1 });
 
-            await service.VerifyResultStatus(match);
+            await Assert.ThrowsAsync<AutoRefundException>(() => service.VerifyResultStatus(match));
+        }
 
-            await verificationStatusService.Received().CheckRunningOdds(match);
-            await verificationStatusService.Received().CheckTicketExclusion(match);
+        [Fact]
+        public async Task VerifyResultStatus_ExistMarkedTicket_ThrowException()
+        {
+            var match = new Match();
+            verificationStatusService.CheckRunningOdds(match).Returns(new CheckOddsCriteria());
+            verificationStatusService.CheckTicketExclusion(match).Returns(new CheckMarkedTicketsCriteria { IsExistMarkedTicket = true });
+
+            await Assert.ThrowsAsync<TicketExclusionException>(() => service.VerifyResultStatus(match));
         }
     }
 }

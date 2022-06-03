@@ -1,6 +1,7 @@
 ﻿using AutoRefundOtherSports.Exceptions;
 using AutoRefundOtherSports.Models;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace AutoRefundOtherSports.Services
@@ -29,21 +30,33 @@ namespace AutoRefundOtherSports.Services
             {
                 return;
             }
-            match.ResultDetails.ForEach(item =>
-            {
-                if (!resultStatusRunning.Contains(item.ResultStatusId))
-                {
-                    throw new SettledException { StopLoop = true };
-                }
-            });
 
-            await verificationStatusService.CheckTicketSettled(match);
+            var resultNotRunning = match.ResultDetails.FirstOrDefault(item => !resultStatusRunning.Contains(item.ResultStatusId));
+            if (resultNotRunning != null)
+            {
+                throw new SettledException { StopLoop = true };
+            }
+
+            var resultCheckingTicket = await verificationStatusService.CheckTicketSettled(match);
+            if (resultCheckingTicket.ErrCode > 0)
+            {
+                throw new AutoRefundException { Description = resultCheckingTicket.ErrMsg, StopLoop = true };
+            }
         }
 
         public async Task VerifyResultStatus(Match match)
         {
-            await verificationStatusService.CheckRunningOdds(match);
-            await verificationStatusService.CheckTicketExclusion(match);
+            var resultCheckingOdds = await verificationStatusService.CheckRunningOdds(match);
+            if (resultCheckingOdds.ErrCode > 0)
+            {
+                throw new AutoRefundException(resultCheckingOdds.ErrMsg);
+            };
+
+            var resultCheckingTicket = await verificationStatusService.CheckTicketExclusion(match);
+            if (resultCheckingTicket.IsExistMarkedTicket)
+            {
+                throw new TicketExclusionException();
+            }
         }
     }
 }

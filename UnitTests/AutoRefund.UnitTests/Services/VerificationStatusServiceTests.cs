@@ -1,5 +1,4 @@
 ﻿using AutoRefundOtherSports.Criteria;
-using AutoRefundOtherSports.Exceptions;
 using AutoRefundOtherSports.Models;
 using AutoRefundOtherSports.Services;
 using Fanex.Data.Repository;
@@ -7,6 +6,7 @@ using NSubstitute;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoRefundOtherSports;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace AutoRefund.UnitTests.Services
@@ -27,7 +27,7 @@ namespace AutoRefund.UnitTests.Services
         }
 
         [Fact]
-        public async Task CheckRunningOdds_RunningOdds_ThrowException()
+        public async Task CheckRunningOdds_Always_ResultCriteria()
         {
             var criteria = new CheckOddsCriteria();
             createQueryService.CreateQueryCheckOdds(Arg.Any<Match>()).Returns(criteria);
@@ -35,26 +35,35 @@ namespace AutoRefund.UnitTests.Services
             {
                 criteria.ErrCode = 1;
             });
-
-            await Assert.ThrowsAsync<AutoRefundException>(() => service.CheckRunningOdds(new Match()));
+            var result = await service.CheckRunningOdds(new Match());
+            Assert.Equal(criteria, result);
         }
 
         [Fact]
-        public async Task CheckTicketExclusion_TicketExclusion_ThrowException()
+        public async Task CheckTicketExclusion_Always_ResultCriteria()
         {
             var match = new Match
             {
+                MatchId = 1,
                 ResultDetails = new List<ResultDetail>
                 {
                     new ResultDetail()
                 }
             };
+
+            var expected = new CheckMarkedTicketsCriteria
+            {
+                MatchId = match.MatchId,
+                ResourceIds = "",
+                IsExistMarkedTicket = true
+            };
             await repository.ExecuteAsync(Arg.Do<CheckMarkedTicketsCriteria>(item => item.IsExistMarkedTicket = true));
-            await Assert.ThrowsAsync<TicketExclusionException>(() => service.CheckTicketExclusion(match));
+            var result = await service.CheckTicketExclusion(match);
+            Assert.Equal(JsonConvert.SerializeObject(expected), JsonConvert.SerializeObject(result));
         }
 
         [Fact]
-        public async Task CheckTicketSettled_TickedSettled_ThrowException()
+        public async Task CheckTicketSettled_Always_ResultCriteria()
         {
             var criteria = new TicketCheckingCriteria();
             createQueryService.CreateQueryCheckTicketRunning(Arg.Any<Match>()).Returns(criteria);
@@ -63,7 +72,8 @@ namespace AutoRefund.UnitTests.Services
                 criteria.ErrCode = 1;
             });
 
-            await Assert.ThrowsAsync<AutoRefundException>(() => service.CheckTicketSettled(new Match()));
+            var result = await service.CheckTicketSettled(new Match());
+            Assert.Equal(criteria, result);
         }
     }
 }

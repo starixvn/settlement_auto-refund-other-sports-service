@@ -1,5 +1,4 @@
 ﻿using AutoRefundOtherSports.Criteria;
-using AutoRefundOtherSports.Exceptions;
 using AutoRefundOtherSports.Models;
 using Fanex.Data.Repository;
 using System.Linq;
@@ -9,11 +8,11 @@ namespace AutoRefundOtherSports.Services
 {
     public interface IVerificationStatusService
     {
-        Task CheckRunningOdds(Match match);
+        Task<CheckOddsCriteria> CheckRunningOdds(Match match);
 
-        Task CheckTicketExclusion(Match match);
+        Task<CheckMarkedTicketsCriteria> CheckTicketExclusion(Match match);
 
-        Task CheckTicketSettled(Match match);
+        Task<TicketCheckingCriteria> CheckTicketSettled(Match match);
     }
 
     public class VerificationStatusServiceImp : IVerificationStatusService
@@ -30,19 +29,16 @@ namespace AutoRefundOtherSports.Services
             this.repository = repository;
         }
 
-        public async Task CheckRunningOdds(Match match)
+        public async Task<CheckOddsCriteria> CheckRunningOdds(Match match)
         {
             var criteria = createQueryService.CreateQueryCheckOdds(match);
 
             await repository.ExecuteAsync(criteria);
 
-            if (criteria.ErrCode > 0)
-            {
-                throw new AutoRefundException(criteria.ErrMsg);
-            }
+            return criteria;
         }
 
-        public async Task CheckTicketExclusion(Match match)
+        public async Task<CheckMarkedTicketsCriteria> CheckTicketExclusion(Match match)
         {
             var criteria = new CheckMarkedTicketsCriteria
             {
@@ -52,22 +48,16 @@ namespace AutoRefundOtherSports.Services
 
             await repository.ExecuteAsync(criteria);
 
-            if (criteria.IsExistMarkedTicket)
-            {
-                throw new TicketExclusionException();
-            }
+            return criteria;
         }
 
-        public async Task CheckTicketSettled(Match match)
+        public async Task<TicketCheckingCriteria> CheckTicketSettled(Match match)
         {
             var criteria = createQueryService.CreateQueryCheckTicketRunning(match);
 
             await repository.ExecuteAsync(criteria);
 
-            if (criteria.ErrCode > 0)
-            {
-                throw new AutoRefundException { Description = criteria.ErrMsg, StopLoop = true };
-            }
+            return criteria;
         }
     }
 }
