@@ -25,7 +25,7 @@ namespace AutoRefundOtherSports.Services
     {
         private readonly IDynamicRepository repository;
 
-        private const string KEY_LEAGUEID = "Settlement-AutoPayout-AutoInstant-LeagueId";
+        private const string KeyLeagueId = "Settlement-AutoPayout-AutoInstant-LeagueId";
 
         private readonly ICache cache;
 
@@ -55,7 +55,7 @@ namespace AutoRefundOtherSports.Services
             var resultDetails = (await repository.FetchAsync<ResultDetail>(new ResultListingCriteria())).ToList();
             var matches = GroupMatch(resultDetails);
 
-            cache.TryGet(KEY_LEAGUEID, out int leagueId);
+            cache.TryGet(KeyLeagueId, out int leagueId);
 
             return appSettingsKey.EnvironmentName switch
             {
@@ -67,7 +67,7 @@ namespace AutoRefundOtherSports.Services
             };
         }
 
-        private List<Match> GroupMatch(List<ResultDetail> resultDetails)
+        private static List<Match> GroupMatch(List<ResultDetail> resultDetails)
         {
             var matches = resultDetails.GroupBy(result => new { result.MatchId, result.LeagueId, result.TypeId })
                 .Select(match => new Match
@@ -80,13 +80,7 @@ namespace AutoRefundOtherSports.Services
 
             return matches;
         }
-
-        private async Task<HedgeMatchDetail> GetHedgeMatch(int matchId)
-        {
-            var criteria = new GetHedgeMatchCriteria { MatchId = matchId };
-            return await repository.GetAsync<HedgeMatchDetail>(criteria);
-        }
-
+        
         public async Task Update(Match match, string remark, int status)
         {
             var criteria = createQueryService.QueryUpdateResult(match, remark, status);
@@ -96,23 +90,27 @@ namespace AutoRefundOtherSports.Services
 
         public async Task Push(Match match)
         {
-            var criteria = createQueryService.QuerySettle(match);
-            await repository.ExecuteAsync(criteria);
-            if (criteria.ErrCode != DeploymentError)
+            var result = await SettleMatch(match);
+            if (result.ErrCode == DeploymentError)
             {
-                if (criteria.ErrCode != 0)
-                {
-                    await loggingService.WriteLog(match, criteria.ErrMsg);
-                    await Update(match, criteria.ErrMsg, MatchStatus.Failed);
-                }
-                else
-                {
-                    await SettleHedgeMatch(match, criteria);
-                }
+               await SetFlagDeploySpName();
             }
             else
             {
-                SetFlagDeploySpName();
+                await SettleHedgeMatchOrWriteLog(match, result);
+            }
+        }
+
+        private async Task SettleHedgeMatchOrWriteLog(Match match, Result result)
+        {
+            if (result.IsSuccessful)
+            {
+                await SettleHedgeMatch(match);
+            }
+            else
+            {
+                await loggingService.WriteLog(match, result.ErrMsg);
+                await Update(match, result.ErrMsg, MatchStatus.Failed);
             }
         }
 
@@ -125,24 +123,41 @@ namespace AutoRefundOtherSports.Services
             await repository.ExecuteAsync(criteria);
         }
 
-        private async Task SettleHedgeMatch(Match match, SettleCriteria criteria)
+        private async Task SettleHedgeMatch(Match match)
         {
             var hedgeMatch = await GetHedgeMatch(match.MatchId);
             if (hedgeMatch != null)
             {
-                criteria.MatchId = hedgeMatch.MatchId;
-                await repository.ExecuteAsync(criteria);
-                if (criteria.ErrCode != 0)
+                match.MatchId = hedgeMatch.MatchId;
+                var result =await SettleMatch(match);
+                if (!result.IsSuccessful)
                 {
-                    await loggingService.WriteLog(match, criteria.ErrMsg);
+                    await loggingService.WriteLog(match, result.ErrMsg);
                 }
             }
         }
 
-        private void SetFlagDeploySpName()
+        private async Task<HedgeMatchDetail> GetHedgeMatch(int matchId)
+        {
+            var criteria = new GetHedgeMatchCriteria { MatchId = matchId };
+            return await repository.GetAsync<HedgeMatchDetail>(criteria);
+        }
+
+        private async Task<Result> SettleMatch(Match match)
+        {
+            var criteria = createQueryService.QuerySettle(match);
+            await repository.ExecuteAsync(criteria);
+            return new Result
+            {
+                ErrCode = criteria.ErrCode,
+                ErrMsg = criteria.ErrMsg
+            };
+        }
+
+        private async Task SetFlagDeploySpName()
         {
             var cachePolicy = new CacheItemOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(int.Parse(appSettingsKey.DeploymentDelay)));
-            cache.Set(appSettingsKey.DeploymentSpName, 1, cachePolicy);
+            await cache.SetAsync(appSettingsKey.DeploymentSpName, 1, cachePolicy);
         }
     }
 }

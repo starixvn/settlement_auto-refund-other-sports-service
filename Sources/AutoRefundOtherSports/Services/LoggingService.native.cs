@@ -2,6 +2,7 @@
 using AutoRefundOtherSports.Models;
 using Fanex.Data.Repository;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace AutoRefundOtherSports.Services
@@ -39,12 +40,7 @@ namespace AutoRefundOtherSports.Services
 
         private static string GenerateErrorLogMessage(Match match, string message)
         {
-            var resourceIds = new List<string>();
-            foreach (var resultDetail in match.ResultDetails)
-            {
-                resourceIds.Add(resultDetail.ResourceId);
-            }
-
+            var resourceIds = match.ResultDetails.Select(resultDetail => resultDetail.ResourceId).ToList();
             var resources = string.Join(",", resourceIds);
             var title = $"NAP: Auto Refund OS Result: {resources}";
             var remark = new List<string>

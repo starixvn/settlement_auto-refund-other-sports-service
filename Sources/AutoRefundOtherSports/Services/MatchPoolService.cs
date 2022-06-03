@@ -16,30 +16,22 @@ namespace AutoRefundOtherSports.Services
     {
         private readonly IMatchService matchService;
 
-        private readonly List<Match> poolOfMatches;
-
         private readonly object lockObject;
 
         public MatchPoolServiceImp(IMatchService matchService)
         {
             this.matchService = matchService;
-            poolOfMatches = new List<Match>();
+            PoolOfMatches = new List<Match>();
             lockObject = new object();
         }
 
-        public List<Match> PoolOfMatches
-        {
-            get
-            {
-                return poolOfMatches;
-            }
-        }
+        public List<Match> PoolOfMatches { get; }
 
         public void RemoveMatch(Match match)
         {
             lock (lockObject)
             {
-                poolOfMatches.RemoveAll(m => m.MatchId == match.MatchId);
+                PoolOfMatches.RemoveAll(m => m.MatchId == match.MatchId);
             }
         }
 
@@ -49,8 +41,8 @@ namespace AutoRefundOtherSports.Services
 
             lock (lockObject)
             {
-                var newMatches = matches.Except(poolOfMatches).ToList();
-                poolOfMatches.AddRange(newMatches);
+                var newMatches = matches.Except(PoolOfMatches).ToList();
+                PoolOfMatches.AddRange(newMatches);
 
                 return newMatches;
             }

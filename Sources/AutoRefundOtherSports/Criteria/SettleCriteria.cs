@@ -25,7 +25,7 @@ namespace AutoRefundOtherSports.Criteria
 
         public override bool IsValid()
         {
-            return true;
+            return MatchId > 0;
         }
     }
 }
