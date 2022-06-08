@@ -1,5 +1,5 @@
 {
-  "ServerUri": "https://sonarqube.nexdev.net",
+  "ServerUri": "https://sonarqube.nexdev.net/",
   "Organization": null,
   "ProjectKey": "AutoRefund-OtherSports-Service",
   "ProjectName": "Olympus /  AutoRefund OtherSports Service",

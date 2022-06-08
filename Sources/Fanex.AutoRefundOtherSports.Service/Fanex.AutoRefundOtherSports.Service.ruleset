@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="SonarQube - Olympus /  AutoRefund OtherSports Service Nexcel CSharp" ToolsVersion="16.0">
+  <Include Path="..\..\.sonarlint\autorefund-othersports-servicecsharp.ruleset" Action="Default" />
+  <Include Path="fanex.autorefundothersports.service-1.ruleset" Action="Default" />
+</RuleSet>

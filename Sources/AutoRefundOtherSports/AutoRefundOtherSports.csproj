@@ -5,11 +5,11 @@
     <TargetFramework>net5.0</TargetFramework>
     <ApplicationIcon />
     <StartupObject />
-    <CodeAnalysisRuleSet>..\..\.sonarlint\olympus-autorefund-othersports-servicecsharp.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>AutoRefundOtherSports.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>
-    <AdditionalFiles Include="..\..\.sonarlint\olympus-autorefund-othersports-service\CSharp\SonarLint.xml" Link="SonarLint.xml" />
+    <AdditionalFiles Include="..\..\.sonarlint\autorefund-othersports-service\CSharp\SonarLint.xml" Link="SonarLint.xml" />
   </ItemGroup>
 
   <ItemGroup>

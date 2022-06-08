@@ -56,18 +56,18 @@ namespace AutoRefund.UnitTests.Services
             service = new MatchServiceImp(repository, cache, appSettingsOptions, createQueryService, loggingService);
         }
 
-        private void setLeague(int leagueId)
+        private void SetLeague(int leagueId)
         {
-            const string KEY_INCLUDE_LEAGUEIDS = "Settlement-AutoPayout-AutoInstant-LeagueId";
-            const int CACHE_EXPIRED_IN_DAYS = 1095;
-            var cachePolicy = new CacheItemOptions().SetAbsoluteExpiration(TimeSpan.FromDays(CACHE_EXPIRED_IN_DAYS));
-            cache.Set(KEY_INCLUDE_LEAGUEIDS, leagueId, cachePolicy);
+            const string keyIncludeLeagueIds = "Settlement-AutoPayout-AutoInstant-LeagueId";
+            const int cacheExpiredInDays = 1095;
+            var cachePolicy = new CacheItemOptions().SetAbsoluteExpiration(TimeSpan.FromDays(cacheExpiredInDays));
+            cache.Set(keyIncludeLeagueIds, leagueId, cachePolicy);
         }
 
         [Fact]
         public async Task GetMatches_ExistedIncludeLeagueIdAndExcludeLeagueId_ReturnsRightMatches()
         {
-            setLeague(123);
+            SetLeague(123);
             repository.FetchAsync<ResultDetail>(Arg.Any<ResultListingCriteria>()).Returns(resultDetails);
 
             var list = await service.GetMatches();
@@ -78,7 +78,7 @@ namespace AutoRefund.UnitTests.Services
         [Fact]
         public async Task GetMatches_NotExistLeagueTest_ReturnAllMatches()
         {
-            setLeague(0);
+            SetLeague(0);
             repository.FetchAsync<ResultDetail>(Arg.Any<ResultListingCriteria>()).Returns(resultDetails);
 
             var list = await service.GetMatches();
@@ -97,7 +97,7 @@ namespace AutoRefund.UnitTests.Services
             var appSettingsOptions = Options.Create(settings);
 
             var tempService = new MatchServiceImp(repository, cache, appSettingsOptions, createQueryService, loggingService);
-            setLeague(123);
+            SetLeague(123);
 
             repository.FetchAsync<ResultDetail>(Arg.Any<ResultListingCriteria>()).Returns(resultDetails);
 
@@ -178,7 +178,7 @@ namespace AutoRefund.UnitTests.Services
             };
 
             var appSettingsOptions = Options.Create(settings);
-            ICache tempCache = Substitute.For<ICache>();
+            var tempCache = Substitute.For<ICache>();
             var newService = new MatchServiceImp(repository, tempCache, appSettingsOptions, createQueryService, loggingService);
             var match = new Match { MatchId = 1 };
             createQueryService.QuerySettle(match).Returns(new SettleCriteria());
@@ -189,7 +189,7 @@ namespace AutoRefund.UnitTests.Services
 
             await newService.Push(match);
 
-            tempCache.Received().Set("Deploy", 1, Arg.Any<CacheItemOptions>());
+            await tempCache.Received().SetAsync("Deploy", 1, Arg.Any<CacheItemOptions>());
         }
     }
 }

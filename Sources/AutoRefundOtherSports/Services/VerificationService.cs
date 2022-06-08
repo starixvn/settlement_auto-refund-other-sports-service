@@ -50,7 +50,7 @@ namespace AutoRefundOtherSports.Services
             if (resultCheckingOdds.ErrCode > 0)
             {
                 throw new AutoRefundException(resultCheckingOdds.ErrMsg);
-            };
+            }
 
             var resultCheckingTicket = await verificationStatusService.CheckTicketExclusion(match);
             if (resultCheckingTicket.IsExistMarkedTicket)

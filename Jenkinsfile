@@ -15,7 +15,7 @@ pipeline {
     stage('Build') {
       steps {        
         script{
-          pipelineLib.beginSonarQubeForMsBuild("AutoRefund-OtherSports-Service", "Olympus /  AutoRefund OtherSports Service", "/d:sonar.cs.opencover.reportsPaths=%WORKSPACE%\\CoverageReports\\*.xml /d:sonar.exclusions=**/*.native.*,**/*Criteria.*,**/Models/*.cs,**/Constants/*.cs /d:sonar.cs.vstest.reportsPaths=%WORKSPACE%\\TestResults\\*.trx")
+          pipelineLib.beginSonarQubeForMsBuild("AutoRefund-OtherSports-Service", "Olympus /  AutoRefund OtherSports Service", "/d:sonar.cs.opencover.reportsPaths=%WORKSPACE%\\CoverageReports\\*.xml /d:sonar.exclusions=**/*.native.*,**/*Criteria.*,**/*Exception.cs,**/Models/*.cs,**/Constants/*.cs /d:sonar.cs.vstest.reportsPaths=%WORKSPACE%\\TestResults\\*.trx")
 
           pipelineLib.msBuild16("Fanex.AutoRefundOtherSports.Service.sln")
         }

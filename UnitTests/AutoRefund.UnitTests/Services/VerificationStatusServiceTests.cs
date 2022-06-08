@@ -5,7 +5,6 @@ using Fanex.Data.Repository;
 using NSubstitute;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AutoRefundOtherSports;
 using Newtonsoft.Json;
 using Xunit;
 
