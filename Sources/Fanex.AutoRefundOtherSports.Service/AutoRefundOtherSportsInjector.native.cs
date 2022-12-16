@@ -1,10 +1,12 @@
-﻿using AutoRefundOtherSports.Services;
+﻿using AutoMapper;
+using AutoRefundOtherSports.Services;
 using Fanex.Caching;
 using Fanex.Caching.Redis;
 using Fanex.Data.Repository;
+using Fanex.Settlement.ScaleOut;
+using Fanex.Settlement.ScaleOut.Services;
 using Kaden.XmlConverter;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Http;
 using ONEbook.UM.AspNetCore;
 using ONEbook.UM.Configurations;
 using ONEbook.UM.Helpers;
@@ -16,6 +18,7 @@ namespace Fanex.AutoRefundOtherSports
     {
         public static void InitializeServices(this IServiceCollection service, IConfiguration configuration)
         {
+            ConfigureAutoMapper(service);
             service.AddSingleton<IDynamicRepository, DynamicRepository>();
             service.AddSingleton<IMatchPoolService, MatchPoolServiceImp>();
             service.AddSingleton<ILoggingService, LoggingServiceImp>();
@@ -27,6 +30,10 @@ namespace Fanex.AutoRefundOtherSports
             service.AddSingleton<IMatchService, MatchServiceImp>();
             service.AddTransient<IMaintenanceService, MaintenanceServiceImp>();
             service.AddSingleton<XmlConvertService, XmlConvertServiceImp>();
+            service.AddSingleton<SettleService, SettleServiceImp>();
+            service.AddSingleton<ScaleOutSettleService, ScaleOutSettleServiceImp>();
+            service.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            service.AddSingleton<GeneralService, GeneralServiceImp>();
 
             service.AddSingleton(new UMClientConfiguration().Initialize(configuration));
             service.AddSingleton<IUMCacheService, UMCacheService>();
@@ -47,6 +54,17 @@ namespace Fanex.AutoRefundOtherSports
                 ApplicationName = configuration.GetSection("Redis.ApplicationName").Value,
             }));
             service.AddSingleton<ICacheService>(new CacheService());
+        }
+
+        private static void ConfigureAutoMapper(IServiceCollection service)
+        {
+            var mapperConfig = new MapperConfiguration(mc =>
+            {
+                mc.AddProfile(typeof(ScaleOutMappingProfile));
+            });
+
+            IMapper mapper = mapperConfig.CreateMapper();
+            service.AddSingleton(mapper);
         }
     }
 }

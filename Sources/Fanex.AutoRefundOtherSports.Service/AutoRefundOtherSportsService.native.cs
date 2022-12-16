@@ -4,18 +4,11 @@ using Fanex.Data;
 using Fanex.Data.SqlServer;
 using Fanex.Logging;
 using Fanex.Logging.Sentry;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using ONEbook.UM;
 using ONEbook.UM.AspNetCore;
 using ONEbook.UM.Configurations;
 using ONEbook.UM.Transport;
 using Sentry;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Fanex.AutoRefundOtherSports.Service
 {
@@ -75,7 +68,7 @@ namespace Fanex.AutoRefundOtherSports.Service
         {
             running = true;
             var autoRefundThread = new Thread(RefundThreadProcess);
-            Console.WriteLine($"AutoRefund Other Sports Service Starting at { DateTime.Now }");
+            Console.WriteLine($"AutoRefund Other Sports Service Starting at {DateTime.Now}");
             autoRefundThread.Start();
             return Task.CompletedTask;
         }
@@ -83,7 +76,7 @@ namespace Fanex.AutoRefundOtherSports.Service
         public Task StopAsync(CancellationToken cancellationToken)
         {
             running = false;
-            Console.WriteLine($"AutoRefund Other Sports Service Stopping at { DateTime.Now }");
+            Console.WriteLine($"AutoRefund Other Sports Service Stopping at {DateTime.Now}");
             return Task.CompletedTask;
         }
 

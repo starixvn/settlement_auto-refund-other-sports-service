@@ -1,4 +1,5 @@
-﻿using Fanex.Data.Repository;
+﻿using Fanex.Data;
+using Fanex.Data.Repository;
 
 namespace AutoRefundOtherSports.Criteria
 {
@@ -9,6 +10,9 @@ namespace AutoRefundOtherSports.Criteria
         public int TypeId { get; set; }
 
         public string ResourceIds { get; set; }
+
+        [SpParam(Ignored = true)]
+        public string DbServer { get; set; }
 
         public int ErrCode { get; set; }
 
@@ -21,7 +25,7 @@ namespace AutoRefundOtherSports.Criteria
 
         public override string GetSettingKey()
         {
-            return "NAP_Set_AutoRefund_MatchChecking";
+            return $"NAP_Set_AutoRefund_MatchChecking_{DbServer}";
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace AutoRefundOtherSports.Models
+﻿using System.Collections.Generic;
+
+namespace AutoRefundOtherSports.Models
 {
     public class AppSettingsKey
     {
@@ -11,5 +13,7 @@
         public string DeploymentDelay { get; set; }
 
         public string DeploymentSpName { get; set; }
+
+        public List<string> SiteDbServer { get; set; }
     }
 }

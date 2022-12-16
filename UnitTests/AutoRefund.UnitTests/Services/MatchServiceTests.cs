@@ -8,7 +8,6 @@ using Microsoft.Extensions.Options;
 using NSubstitute;
 using System;
 using System.Collections.Generic;
-using System.Net.WebSockets;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -26,6 +25,8 @@ namespace AutoRefund.UnitTests.Services
 
         private readonly ILoggingService loggingService;
 
+        private readonly SettleService settleService;
+
         private readonly IEnumerable<ResultDetail> resultDetails;
 
         public MatchServiceTests()
@@ -33,6 +34,7 @@ namespace AutoRefund.UnitTests.Services
             repository = Substitute.For<IDynamicRepository>();
             createQueryService = Substitute.For<ICreateQueryService>();
             loggingService = Substitute.For<ILoggingService>();
+            settleService = Substitute.For<SettleService>();
             cache = new RedisCache(new RedisCacheOptions
             {
                 ConnectionString = $"ha.nexdev.net:16379,password=foo1@bared,defaultDatabase=11",
@@ -54,7 +56,7 @@ namespace AutoRefund.UnitTests.Services
                 new ResultDetail() { MatchId = 2, LeagueId = 1, ResourceId = "0101" }
             };
 
-            service = new MatchServiceImp(repository, cache, appSettingsOptions, createQueryService, loggingService);
+            service = new MatchServiceImp(repository, cache, appSettingsOptions, createQueryService, loggingService, settleService);
         }
 
         private void SetLeague(int leagueId)
@@ -97,7 +99,7 @@ namespace AutoRefund.UnitTests.Services
 
             var appSettingsOptions = Options.Create(settings);
 
-            var tempService = new MatchServiceImp(repository, cache, appSettingsOptions, createQueryService, loggingService);
+            var tempService = new MatchServiceImp(repository, cache, appSettingsOptions, createQueryService, loggingService, settleService);
             SetLeague(123);
 
             repository.FetchAsync<ResultDetail>(Arg.Any<ResultListingCriteria>()).Returns(resultDetails);
@@ -116,7 +118,7 @@ namespace AutoRefund.UnitTests.Services
             };
 
             var appSettingsOptions = Options.Create(settings);
-            var tempService = new MatchServiceImp(repository, cache, appSettingsOptions, createQueryService, loggingService);
+            var tempService = new MatchServiceImp(repository, cache, appSettingsOptions, createQueryService, loggingService, settleService);
             repository.FetchAsync<ResultDetail>(Arg.Any<ResultListingCriteria>()).Returns(resultDetails);
 
             var list = await tempService.GetMatches();
@@ -145,28 +147,14 @@ namespace AutoRefund.UnitTests.Services
         }
 
         [Fact]
-        public async Task Push_Always_ExecuteCriteria()
-        {
-            var match = new Match { MatchId = 1 };
-            createQueryService.QuerySettle(match).Returns(new SettleCriteria());
-
-            await service.Push(match);
-
-            await repository.Received().ExecuteAsync(Arg.Any<SettleCriteria>());
-        }
-
-        [Fact]
         public async Task Push_SettleFailed_LogFailedAndUpdateStatus()
         {
             var match = new Match();
-            createQueryService.QuerySettle(Arg.Any<Match>()).Returns(new SettleCriteria());
-            createQueryService.QueryUpdateResult(match, Arg.Any<string>(), Arg.Any<int>())
-                .Returns(new UpdateResultStatusCriteria());
-            await repository.ExecuteAsync(Arg.Do<SettleCriteria>(item =>
+            settleService.SettleMatch(Arg.Any<Match>()).Returns(new Result
             {
-                item.ErrCode = 1;
-                item.ErrMsg = "Error";
-            }));
+                ErrCode = 1,
+                ErrMsg = "Error"
+            }); ;
 
             await service.Push(match);
 
@@ -178,12 +166,12 @@ namespace AutoRefund.UnitTests.Services
         public async Task Push_SettledSuccess_ExecutePushHedgeMatch()
         {
             var match = new Match { MatchId = 1 };
-            createQueryService.QuerySettle(match).Returns(new SettleCriteria());
+            settleService.SettleMatch(Arg.Any<Match>()).Returns(new Result());
             repository.GetAsync<HedgeMatchDetail>(Arg.Any<GetHedgeMatchCriteria>()).Returns(new HedgeMatchDetail { MatchId = 2 });
 
             await service.Push(match);
 
-            await repository.Received(2).ExecuteAsync(Arg.Any<SettleCriteria>());
+            await settleService.Received(2).SettleMatch(Arg.Any<Match>());
         }
 
         [Fact]
@@ -197,13 +185,9 @@ namespace AutoRefund.UnitTests.Services
 
             var appSettingsOptions = Options.Create(settings);
             var tempCache = Substitute.For<ICache>();
-            var newService = new MatchServiceImp(repository, tempCache, appSettingsOptions, createQueryService, loggingService);
+            var newService = new MatchServiceImp(repository, tempCache, appSettingsOptions, createQueryService, loggingService, settleService);
             var match = new Match { MatchId = 1 };
-            createQueryService.QuerySettle(match).Returns(new SettleCriteria());
-            await repository.ExecuteAsync(Arg.Do<SettleCriteria>(item =>
-            {
-                item.ErrCode = 99;
-            }));
+            settleService.SettleMatch(Arg.Any<Match>()).Returns(new Result { ErrCode = 99 });
 
             await newService.Push(match);
 

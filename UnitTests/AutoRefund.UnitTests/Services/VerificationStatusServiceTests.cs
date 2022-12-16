@@ -2,11 +2,10 @@
 using AutoRefundOtherSports.Models;
 using AutoRefundOtherSports.Services;
 using Fanex.Data.Repository;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json;
 using Xunit;
 
 namespace AutoRefund.UnitTests.Services
@@ -23,7 +22,8 @@ namespace AutoRefund.UnitTests.Services
         {
             createQueryService = Substitute.For<ICreateQueryService>();
             repository = Substitute.For<IDynamicRepository>();
-            service = new VerificationStatusServiceImp(createQueryService, repository);
+            var appSettingsOptions = Options.Create(new AppSettingsKey { SiteDbServer = new List<string> { "01", "02" } });
+            service = new VerificationStatusServiceImp(createQueryService, repository, appSettingsOptions);
         }
 
         [Fact]
@@ -50,16 +50,9 @@ namespace AutoRefund.UnitTests.Services
                     new ResultDetail()
                 }
             };
-
-            var expected = new CheckMarkedTicketsCriteria
-            {
-                MatchId = match.MatchId,
-                ResourceIds = "",
-                IsExistMarkedTicket = true
-            };
             await repository.ExecuteAsync(Arg.Do<CheckMarkedTicketsCriteria>(item => item.IsExistMarkedTicket = true));
             var result = await service.CheckTicketExclusion(match);
-            Assert.Equal(JsonConvert.SerializeObject(expected), JsonConvert.SerializeObject(result));
+            Assert.True(result);
         }
 
         [Fact]

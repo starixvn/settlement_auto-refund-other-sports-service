@@ -1,12 +1,12 @@
-﻿using AutoRefundOtherSports.Exceptions;
+﻿using AutoRefundOtherSports;
+using AutoRefundOtherSports.Criteria;
+using AutoRefundOtherSports.Exceptions;
 using AutoRefundOtherSports.Models;
 using AutoRefundOtherSports.Services;
 using NSubstitute;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AutoRefundOtherSports.Criteria;
 using Xunit;
-using AutoRefundOtherSports;
 
 namespace AutoRefund.UnitTests.Services
 {
@@ -88,7 +88,7 @@ namespace AutoRefund.UnitTests.Services
         {
             var match = new Match();
             verificationStatusService.CheckRunningOdds(match).Returns(new CheckOddsCriteria());
-            verificationStatusService.CheckTicketExclusion(match).Returns(new CheckMarkedTicketsCriteria { IsExistMarkedTicket = true });
+            verificationStatusService.CheckTicketExclusion(match).Returns(true);
 
             await Assert.ThrowsAsync<TicketExclusionException>(() => service.VerifyResultStatus(match));
         }
@@ -98,7 +98,7 @@ namespace AutoRefund.UnitTests.Services
         {
             var match = new Match();
             verificationStatusService.CheckRunningOdds(match).Returns(new CheckOddsCriteria());
-            verificationStatusService.CheckTicketExclusion(match).Returns(new CheckMarkedTicketsCriteria());
+            verificationStatusService.CheckTicketExclusion(match).Returns(false);
 
             var exception = await Record.ExceptionAsync(() => service.VerifyResultStatus(match));
             Assert.Null(exception);

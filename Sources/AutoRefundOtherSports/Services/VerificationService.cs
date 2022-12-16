@@ -52,8 +52,8 @@ namespace AutoRefundOtherSports.Services
                 throw new AutoRefundException(resultCheckingOdds.ErrMsg);
             }
 
-            var resultCheckingTicket = await verificationStatusService.CheckTicketExclusion(match);
-            if (resultCheckingTicket.IsExistMarkedTicket)
+            var isExistMarkedTicket = await verificationStatusService.CheckTicketExclusion(match);
+            if (isExistMarkedTicket)
             {
                 throw new TicketExclusionException();
             }

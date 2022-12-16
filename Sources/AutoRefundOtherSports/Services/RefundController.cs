@@ -1,6 +1,5 @@
 ﻿using AutoRefundOtherSports.Models;
 using Microsoft.Extensions.Options;
-using System.Threading.Tasks;
 
 namespace AutoRefundOtherSports.Services
 {

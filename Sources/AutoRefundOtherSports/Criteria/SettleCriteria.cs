@@ -1,4 +1,5 @@
-﻿using Fanex.Data.Repository;
+﻿using Fanex.Data;
+using Fanex.Data.Repository;
 
 namespace AutoRefundOtherSports.Criteria
 {
@@ -18,9 +19,15 @@ namespace AutoRefundOtherSports.Criteria
 
         public string ErrMsg { get; set; }
 
+        [SpParam(Ignored = true)]
+        public string DbServer { get; set; }
+
+        [SpParam(Ignored = true)]
+        public string SpName => "NAP_Admin_Settlement_Profile_Push";
+
         public override string GetSettingKey()
         {
-            return "NAP_Admin_Settlement_Profile_Push";
+            return $"NAP_Admin_Settlement_Profile_Push_{DbServer}";
         }
 
         public override bool IsValid()

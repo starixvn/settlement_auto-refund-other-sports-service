@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
 namespace AutoRefundOtherSports.Exceptions
 {
@@ -8,7 +7,7 @@ namespace AutoRefundOtherSports.Exceptions
     {
         public SettledException()
         {
-            Description = "ERROR! Some results have been settled already.";
+            Description = "ERROR! Some results have been settled incorrectly already.";
         }
 
         public SettledException(string message)

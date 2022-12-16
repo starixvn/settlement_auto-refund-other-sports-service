@@ -3,10 +3,6 @@ using AutoRefundOtherSports.Models;
 using Fanex.Caching;
 using Fanex.Data.Repository;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace AutoRefundOtherSports.Services
 {
@@ -35,19 +31,23 @@ namespace AutoRefundOtherSports.Services
 
         private readonly ILoggingService loggingService;
 
+        private readonly SettleService settleService;
+
         private const int DeploymentError = 99;
 
         public MatchServiceImp(IDynamicRepository repository,
             ICache cache,
             IOptions<AppSettingsKey> appSettingsKey,
             ICreateQueryService createQueryService,
-            ILoggingService loggingService)
+            ILoggingService loggingService,
+            SettleService settleService)
         {
             this.repository = repository;
             this.cache = cache;
             this.appSettingsKey = appSettingsKey.Value;
             this.createQueryService = createQueryService;
             this.loggingService = loggingService;
+            this.settleService = settleService;
         }
 
         public async Task<List<Match>> GetMatches()
@@ -90,7 +90,7 @@ namespace AutoRefundOtherSports.Services
 
         public async Task Push(Match match)
         {
-            var result = await SettleMatch(match);
+            var result = await settleService.SettleMatch(match);
             if (result.ErrCode == DeploymentError)
             {
                 await SetFlagDeploySpName();
@@ -129,7 +129,7 @@ namespace AutoRefundOtherSports.Services
             if (hedgeMatch != null)
             {
                 match.MatchId = hedgeMatch.MatchId;
-                var result = await SettleMatch(match);
+                var result = await settleService.SettleMatch(match);
                 if (!result.IsSuccessful)
                 {
                     await loggingService.WriteLog(match, result.ErrMsg);
@@ -141,17 +141,6 @@ namespace AutoRefundOtherSports.Services
         {
             var criteria = new GetHedgeMatchCriteria { MatchId = matchId };
             return await repository.GetAsync<HedgeMatchDetail>(criteria);
-        }
-
-        private async Task<Result> SettleMatch(Match match)
-        {
-            var criteria = createQueryService.QuerySettle(match);
-            await repository.ExecuteAsync(criteria);
-            return new Result
-            {
-                ErrCode = criteria.ErrCode,
-                ErrMsg = criteria.ErrMsg
-            };
         }
 
         private async Task SetFlagDeploySpName()

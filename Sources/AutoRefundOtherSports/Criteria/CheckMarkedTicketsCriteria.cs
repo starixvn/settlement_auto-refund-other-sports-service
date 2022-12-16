@@ -1,4 +1,5 @@
-﻿using Fanex.Data.Repository;
+﻿using Fanex.Data;
+using Fanex.Data.Repository;
 
 namespace AutoRefundOtherSports.Criteria
 {
@@ -12,9 +13,12 @@ namespace AutoRefundOtherSports.Criteria
 
         public bool IsMergedParlay { get; } = true;
 
+        [SpParam(Ignored = true)]
+        public string DbServer { get; set; }
+
         public override string GetSettingKey()
         {
-            return "NAP_Set_EarlySettlement_CheckingMarkedTransaction";
+            return $"NAP_Set_EarlySettlement_CheckingMarkedTransaction_{DbServer}";
         }
 
         public override bool IsValid()
