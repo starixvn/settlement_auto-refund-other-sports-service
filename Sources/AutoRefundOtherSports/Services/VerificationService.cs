@@ -1,62 +1,57 @@
 ﻿using AutoRefundOtherSports.Exceptions;
-using AutoRefundOtherSports.Models;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace AutoRefundOtherSports.Services
+namespace AutoRefundOtherSports.Services;
+
+public interface IVerificationService
 {
-    public interface IVerificationService
-    {
-        Task VerifyResultRunning(Match match, int retryIndex);
+    Task VerifyResultRunning(Match match, int retryIndex);
 
-        Task VerifyResultStatus(Match match);
+    Task VerifyResultStatus(Match match);
+}
+
+public class VerificationServiceImp : IVerificationService
+{
+    private readonly List<int> resultStatusRunning = new List<int> { 0, 1, 3 };
+
+    private readonly IVerificationStatusService verificationStatusService;
+
+    public VerificationServiceImp(IVerificationStatusService verificationStatusService)
+    {
+        this.verificationStatusService = verificationStatusService;
     }
 
-    public class VerificationServiceImp : IVerificationService
+    public async Task VerifyResultRunning(Match match, int retryIndex)
     {
-        private readonly List<int> resultStatusRunning = new List<int> { 0, 1, 3 };
-
-        private readonly IVerificationStatusService verificationStatusService;
-
-        public VerificationServiceImp(IVerificationStatusService verificationStatusService)
+        if (retryIndex > 0)
         {
-            this.verificationStatusService = verificationStatusService;
+            return;
         }
 
-        public async Task VerifyResultRunning(Match match, int retryIndex)
+        var resultNotRunning = match.ResultDetails.FirstOrDefault(item => !resultStatusRunning.Contains(item.ResultStatusId));
+        if (resultNotRunning != null)
         {
-            if (retryIndex > 0)
-            {
-                return;
-            }
-
-            var resultNotRunning = match.ResultDetails.FirstOrDefault(item => !resultStatusRunning.Contains(item.ResultStatusId));
-            if (resultNotRunning != null)
-            {
-                throw new SettledException { StopLoop = true };
-            }
-
-            var resultCheckingTicket = await verificationStatusService.CheckTicketSettled(match);
-            if (resultCheckingTicket.ErrCode > 0)
-            {
-                throw new AutoRefundException { Description = resultCheckingTicket.ErrMsg, StopLoop = true };
-            }
+            throw new SettledException { StopLoop = true };
         }
 
-        public async Task VerifyResultStatus(Match match)
+        var resultCheckingTicket = await verificationStatusService.CheckTicketSettled(match);
+        if (resultCheckingTicket.ErrCode > 0)
         {
-            var resultCheckingOdds = await verificationStatusService.CheckRunningOdds(match);
-            if (resultCheckingOdds.ErrCode > 0)
-            {
-                throw new AutoRefundException(resultCheckingOdds.ErrMsg);
-            }
+            throw new AutoRefundException { Description = resultCheckingTicket.ErrMsg, StopLoop = true };
+        }
+    }
 
-            var isExistMarkedTicket = await verificationStatusService.CheckTicketExclusion(match);
-            if (isExistMarkedTicket)
-            {
-                throw new TicketExclusionException();
-            }
+    public async Task VerifyResultStatus(Match match)
+    {
+        var resultCheckingOdds = await verificationStatusService.CheckRunningOdds(match);
+        if (resultCheckingOdds.ErrCode > 0)
+        {
+            throw new AutoRefundException(resultCheckingOdds.ErrMsg);
+        }
+
+        var isExistMarkedTicket = await verificationStatusService.CheckTicketExclusion(match);
+        if (isExistMarkedTicket)
+        {
+            throw new TicketExclusionException();
         }
     }
 }

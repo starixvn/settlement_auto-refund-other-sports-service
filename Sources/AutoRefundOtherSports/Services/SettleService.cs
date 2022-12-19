@@ -1,89 +1,86 @@
-﻿using AutoRefundOtherSports.Criteria;
-using AutoRefundOtherSports.Models;
-using Fanex.Data.Repository;
+﻿using Fanex.Data.Repository;
 using Fanex.Settlement.ScaleOut.Request;
 using Fanex.Settlement.ScaleOut.Services;
 using Microsoft.Extensions.Options;
 
-namespace AutoRefundOtherSports.Services
+namespace AutoRefundOtherSports.Services;
+
+public interface SettleService
 {
-    public interface SettleService
+    Task<Result> SettleMatch(Match match);
+}
+
+public class SettleServiceImp : SettleService
+{
+    private readonly ICreateQueryService createQueryService;
+
+    private readonly IDynamicRepository repository;
+
+    private readonly ScaleOutSettleService scaleOutSettleService;
+
+    private readonly AppSettingsKey appSettingsKey;
+
+    public SettleServiceImp(ICreateQueryService createQueryService,
+        IDynamicRepository repository,
+        ScaleOutSettleService scaleOutSettleService,
+        IOptions<AppSettingsKey> appSettingsKey)
     {
-        Task<Result> SettleMatch(Match match);
+        this.createQueryService = createQueryService;
+        this.repository = repository;
+        this.scaleOutSettleService = scaleOutSettleService;
+        this.appSettingsKey = appSettingsKey.Value;
     }
 
-    public class SettleServiceImp : SettleService
+    public async Task<Result> SettleMatch(Match match)
     {
-        private readonly ICreateQueryService createQueryService;
-
-        private readonly IDynamicRepository repository;
-
-        private readonly ScaleOutSettleService scaleOutSettleService;
-
-        private readonly AppSettingsKey appSettingsKey;
-
-        public SettleServiceImp(ICreateQueryService createQueryService,
-            IDynamicRepository repository,
-            ScaleOutSettleService scaleOutSettleService,
-            IOptions<AppSettingsKey> appSettingsKey)
+        var criteria = createQueryService.QuerySettle(match);
+        var validateTicket = await ValidateBeforeExecute(criteria);
+        if (validateTicket.ErrCode == 0)
         {
-            this.createQueryService = createQueryService;
-            this.repository = repository;
-            this.scaleOutSettleService = scaleOutSettleService;
-            this.appSettingsKey = appSettingsKey.Value;
+            await UpdateMatchInfo(criteria);
+            await ExecuteAsync(criteria);
         }
+        return validateTicket;
+    }
 
-        public async Task<Result> SettleMatch(Match match)
+    private async Task<Result> ValidateBeforeExecute(SettleCriteria criteria)
+    {
+        var request = new EventTicketRequest
         {
-            var criteria = createQueryService.QuerySettle(match);
-            var validateTicket = await ValidateBeforeExecute(criteria);
-            if (validateTicket.ErrCode == 0)
-            {
-                await UpdateMatchInfo(criteria);
-                await ExecuteAsync(criteria);
-            }
-            return validateTicket;
-        }
-
-        private async Task<Result> ValidateBeforeExecute(SettleCriteria criteria)
+            MatchId = criteria.MatchId,
+            Action = criteria.Action,
+            SpName = criteria.SpName,
+            Mode = "ALL",
+            SelectedResources = criteria.SelectedResources,
+            IsAuto = true
+        };
+        var resultMessage = await scaleOutSettleService.ValidateEventAndTicket(request);
+        return new Result
         {
-            var request = new EventTicketRequest
-            {
-                MatchId = criteria.MatchId,
-                Action = criteria.Action,
-                SpName = criteria.SpName,
-                Mode = "ALL",
-                SelectedResources = criteria.SelectedResources,
-                IsAuto = true
-            };
-            var resultMessage = await scaleOutSettleService.ValidateEventAndTicket(request);
-            return new Result
-            {
-                ErrCode = resultMessage.ErrorCode,
-                ErrMsg = resultMessage.ErrorMessage
-            };
-        }
+            ErrCode = resultMessage.ErrorCode,
+            ErrMsg = resultMessage.ErrorMessage
+        };
+    }
 
-        private async Task UpdateMatchInfo(SettleCriteria criteria)
+    private async Task UpdateMatchInfo(SettleCriteria criteria)
+    {
+        var requestUpdateInfo = new UpdateMatchInfoRequest
         {
-            var requestUpdateInfo = new UpdateMatchInfoRequest
-            {
-                Action = criteria.Action,
-                AdminId = criteria.AdminId,
-                MatchId = criteria.MatchId,
-                SelectedResources = criteria.SelectedResources,
-            };
+            Action = criteria.Action,
+            AdminId = criteria.AdminId,
+            MatchId = criteria.MatchId,
+            SelectedResources = criteria.SelectedResources,
+        };
 
-            await scaleOutSettleService.UpdateMatchInfo(requestUpdateInfo);
-        }
+        await scaleOutSettleService.UpdateMatchInfo(requestUpdateInfo);
+    }
 
-        private async Task ExecuteAsync(SettleCriteria criteria)
+    private async Task ExecuteAsync(SettleCriteria criteria)
+    {
+        foreach (var server in appSettingsKey.SiteDbServer)
         {
-            foreach (var server in appSettingsKey.SiteDbServer)
-            {
-                criteria.DbServer = server;
-                await repository.ExecuteAsync(criteria);
-            }
+            criteria.DbServer = server;
+            await repository.ExecuteAsync(criteria);
         }
     }
 }

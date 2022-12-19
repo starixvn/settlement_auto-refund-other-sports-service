@@ -1,82 +1,79 @@
-﻿using AutoRefundOtherSports.Criteria;
-using AutoRefundOtherSports.Models;
-using Fanex.Data.Repository;
+﻿using Fanex.Data.Repository;
 using Microsoft.Extensions.Options;
 
-namespace AutoRefundOtherSports.Services
+namespace AutoRefundOtherSports.Services;
+
+public interface IVerificationStatusService
 {
-    public interface IVerificationStatusService
+    Task<CheckOddsCriteria> CheckRunningOdds(Match match);
+
+    Task<Boolean> CheckTicketExclusion(Match match);
+
+    Task<TicketCheckingCriteria> CheckTicketSettled(Match match);
+}
+
+public class VerificationStatusServiceImp : IVerificationStatusService
+{
+    private readonly ICreateQueryService createQueryService;
+
+    private readonly IDynamicRepository repository;
+
+    private readonly AppSettingsKey appSettingsKey;
+
+    public VerificationStatusServiceImp(
+        ICreateQueryService createQueryService,
+        IDynamicRepository repository,
+        IOptions<AppSettingsKey> appSettingsKey)
     {
-        Task<CheckOddsCriteria> CheckRunningOdds(Match match);
-
-        Task<Boolean> CheckTicketExclusion(Match match);
-
-        Task<TicketCheckingCriteria> CheckTicketSettled(Match match);
+        this.createQueryService = createQueryService;
+        this.repository = repository;
+        this.appSettingsKey = appSettingsKey.Value;
     }
 
-    public class VerificationStatusServiceImp : IVerificationStatusService
+    public async Task<CheckOddsCriteria> CheckRunningOdds(Match match)
     {
-        private readonly ICreateQueryService createQueryService;
+        var criteria = createQueryService.CreateQueryCheckOdds(match);
 
-        private readonly IDynamicRepository repository;
+        await repository.ExecuteAsync(criteria);
 
-        private readonly AppSettingsKey appSettingsKey;
+        return criteria;
+    }
 
-        public VerificationStatusServiceImp(
-            ICreateQueryService createQueryService,
-            IDynamicRepository repository,
-            IOptions<AppSettingsKey> appSettingsKey)
+    public async Task<Boolean> CheckTicketExclusion(Match match)
+    {
+        var criteria = new CheckMarkedTicketsCriteria
         {
-            this.createQueryService = createQueryService;
-            this.repository = repository;
-            this.appSettingsKey = appSettingsKey.Value;
-        }
+            MatchId = match.MatchId,
+            ResourceIds = string.Join(",", match.ResultDetails.Select(item => item.ResourceId).ToList())
+        };
 
-        public async Task<CheckOddsCriteria> CheckRunningOdds(Match match)
+        foreach (var server in appSettingsKey.SiteDbServer)
         {
-            var criteria = createQueryService.CreateQueryCheckOdds(match);
-
+            criteria.DbServer = server;
             await repository.ExecuteAsync(criteria);
-
-            return criteria;
-        }
-
-        public async Task<Boolean> CheckTicketExclusion(Match match)
-        {
-            var criteria = new CheckMarkedTicketsCriteria
+            if (criteria.IsExistMarkedTicket)
             {
-                MatchId = match.MatchId,
-                ResourceIds = string.Join(",", match.ResultDetails.Select(item => item.ResourceId).ToList())
-            };
-
-            foreach (var server in appSettingsKey.SiteDbServer)
-            {
-                criteria.DbServer = server;
-                await repository.ExecuteAsync(criteria);
-                if (criteria.IsExistMarkedTicket)
-                {
-                    return criteria.IsExistMarkedTicket;
-                }
+                return criteria.IsExistMarkedTicket;
             }
-
-            return false;
         }
 
-        public async Task<TicketCheckingCriteria> CheckTicketSettled(Match match)
+        return false;
+    }
+
+    public async Task<TicketCheckingCriteria> CheckTicketSettled(Match match)
+    {
+        var criteria = createQueryService.CreateQueryCheckTicketRunning(match);
+
+        foreach (var server in appSettingsKey.SiteDbServer)
         {
-            var criteria = createQueryService.CreateQueryCheckTicketRunning(match);
-
-            foreach (var server in appSettingsKey.SiteDbServer)
+            criteria.DbServer = server;
+            await repository.ExecuteAsync(criteria);
+            if (criteria.ErrCode > 0)
             {
-                criteria.DbServer = server;
-                await repository.ExecuteAsync(criteria);
-                if (criteria.ErrCode > 0)
-                {
-                    return criteria;
-                }
+                return criteria;
             }
-
-            return criteria;
         }
+
+        return criteria;
     }
 }
