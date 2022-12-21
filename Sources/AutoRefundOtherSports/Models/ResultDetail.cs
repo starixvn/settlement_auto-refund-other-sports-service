@@ -17,6 +17,9 @@ namespace AutoRefundOtherSports.Models
         public byte ResultStatusId { get; set; }
 
         [XmlIgnore]
+        public byte SettlementStatusId { get; set; }
+
+        [XmlIgnore]
         public byte TypeId { get; set; }
     }
 }

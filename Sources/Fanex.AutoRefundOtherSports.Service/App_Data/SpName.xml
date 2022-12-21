@@ -19,9 +19,9 @@
     </Function>
 
     <Function Name="NAP_Set_AutoRefund_MatchChecking">
-      <Setting Key="NAP_Set_AutoRefund_MatchChecking_DBTXN" SpName="NAP_Set_AutoRefund_MatchChecking" DbName="DBTXN.bodb02.bodbAdminNet" />
-      <Setting Key="NAP_Set_AutoRefund_MatchChecking_DBSID01" SpName="NAP_Set_AutoRefund_MatchChecking" DbName="DBSID01.bodb02.bodbAdminNet" />
-      <Setting Key="NAP_Set_AutoRefund_MatchChecking_DBSID02" SpName="NAP_Set_AutoRefund_MatchChecking" DbName="DBSID02.bodb02.bodbAdminNet" />
+      <Setting Key="NAP_Set_AutoRefund_MatchChecking_Ticket_DBTXN" SpName="NAP_Set_AutoRefund_MatchChecking_Ticket" DbName="DBTXN.bodb02.bodbAdminNet" />
+      <Setting Key="NAP_Set_AutoRefund_MatchChecking_Ticket_DBSID01" SpName="NAP_Set_AutoRefund_MatchChecking_Ticket" DbName="DBSID01.bodb02.bodbAdminNet" />
+      <Setting Key="NAP_Set_AutoRefund_MatchChecking_Ticket_DBSID02" SpName="NAP_Set_AutoRefund_MatchChecking_Ticket" DbName="DBSID02.bodb02.bodbAdminNet" />
     </Function>
     <Function Name="NAP_Admin_Settlement_Profile_Push">
       <Setting Key="NAP_Admin_Settlement_Profile_Push_DBTXN" SpName="NAP_Admin_Settlement_Profile_Push" DbName="DBTXN.bodb02.bodbAdminNet" />

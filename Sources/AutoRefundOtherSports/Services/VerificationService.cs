@@ -11,7 +11,9 @@ public interface IVerificationService
 
 public class VerificationServiceImp : IVerificationService
 {
-    private readonly List<int> resultStatusRunning = new List<int> { 0, 1, 3 };
+    private readonly byte settlementStatusCalculated = 4;
+
+    private readonly byte resultStatusUnCalculate = 4;
 
     private readonly IVerificationStatusService verificationStatusService;
 
@@ -27,7 +29,7 @@ public class VerificationServiceImp : IVerificationService
             return;
         }
 
-        var resultNotRunning = match.ResultDetails.Exists(item => !resultStatusRunning.Contains(item.ResultStatusId));
+        var resultNotRunning = match.ResultDetails.Exists(item => item.SettlementStatusId == settlementStatusCalculated || item.ResultStatusId == resultStatusUnCalculate);
         if (resultNotRunning)
         {
             throw new SettledException { StopLoop = true };

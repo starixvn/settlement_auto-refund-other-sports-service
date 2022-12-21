@@ -25,7 +25,7 @@ namespace AutoRefundOtherSports.Criteria
 
         public override string GetSettingKey()
         {
-            return $"NAP_Set_AutoRefund_MatchChecking_{DbServer}";
+            return $"NAP_Set_AutoRefund_MatchChecking_Ticket_{DbServer}";
         }
     }
 }

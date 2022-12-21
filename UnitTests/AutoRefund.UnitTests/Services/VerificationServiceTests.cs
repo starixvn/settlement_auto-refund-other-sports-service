@@ -30,8 +30,21 @@ public class VerificationServiceTests
         {
             ResultDetails = new List<ResultDetail>
                 {
-                    new ResultDetail { ResultStatusId = 4 }
+                    new ResultDetail { SettlementStatusId = 4 }
                 }
+        };
+        await Assert.ThrowsAsync<SettledException>(() => service.VerifyResultRunning(match, 0));
+    }
+
+    [Fact]
+    public async Task VerifyResultRunning_ResultUncalc_ThrowException()
+    {
+        var match = new Match
+        {
+            ResultDetails = new List<ResultDetail>
+            {
+                new ResultDetail { ResultStatusId = 4 }
+            }
         };
         await Assert.ThrowsAsync<SettledException>(() => service.VerifyResultRunning(match, 0));
     }

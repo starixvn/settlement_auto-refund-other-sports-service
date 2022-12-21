@@ -17,6 +17,8 @@ public class CreateQueryServiceImp : ICreateQueryService
 {
     private readonly XmlConvertService xmlConvertService;
 
+    private const int StatusRefunded = 1;
+
     public CreateQueryServiceImp(XmlConvertService xmlConvertService)
     {
         this.xmlConvertService = xmlConvertService;
@@ -36,9 +38,10 @@ public class CreateQueryServiceImp : ICreateQueryService
 
     private string CreateResources(List<ResultDetail> selectedResources)
     {
+        var resultRunning = selectedResources.Where(item => item.SettlementStatusId != StatusRefunded);
         var resources = new Resources<ResultDetail>
         {
-            ResourceItems = selectedResources
+            ResourceItems = resultRunning.ToList()
         };
 
         return xmlConvertService.Serialize(resources);
@@ -71,7 +74,7 @@ public class CreateQueryServiceImp : ICreateQueryService
         {
             MatchId = match.MatchId,
             TypeId = match.TypeId,
-            ResourceIds = string.Join(",", match.ResultDetails.Select(item => item.ResourceId).ToList())
+            ResourceIds = string.Join(",", match.ResultDetails.Where(item => item.SettlementStatusId != StatusRefunded).Select(item => item.ResourceId).ToList())
         };
     }
 
