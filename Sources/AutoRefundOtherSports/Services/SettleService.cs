@@ -45,6 +45,7 @@ public class SettleServiceImp : SettleService
 
     private async Task<Result> ValidateBeforeExecute(SettleCriteria criteria)
     {
+        const string errorCodeMatchInQueue = "1001003";
         var request = new EventTicketRequest
         {
             MatchId = criteria.MatchId,
@@ -54,12 +55,22 @@ public class SettleServiceImp : SettleService
             SelectedResources = criteria.SelectedResources,
             IsAuto = true
         };
-        var resultMessage = await scaleOutSettleService.ValidateEventAndTicket(request);
-        return new Result
+        for (var i = 0; i < appSettingsKey.RetryValidateCount; i++)
         {
-            ErrCode = resultMessage.ErrorCode,
-            ErrMsg = resultMessage.ErrorMessage
-        };
+            var resultMessage = await scaleOutSettleService.ValidateEventAndTicket(request);
+            if (resultMessage.ErrorCode.ToString() == errorCodeMatchInQueue && i < appSettingsKey.RetryValidateCount - 1)
+            {
+                await Task.Delay(appSettingsKey.RetryValidate);
+                continue;
+            }
+            return new Result
+            {
+                ErrCode = resultMessage.ErrorCode,
+                ErrMsg = resultMessage.ErrorMessage
+            };
+        }
+
+        return new Result();
     }
 
     private async Task UpdateMatchInfo(SettleCriteria criteria)

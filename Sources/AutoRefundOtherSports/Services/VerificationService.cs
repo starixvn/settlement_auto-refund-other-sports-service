@@ -27,8 +27,8 @@ public class VerificationServiceImp : IVerificationService
             return;
         }
 
-        var resultNotRunning = match.ResultDetails.FirstOrDefault(item => !resultStatusRunning.Contains(item.ResultStatusId));
-        if (resultNotRunning != null)
+        var resultNotRunning = match.ResultDetails.Exists(item => !resultStatusRunning.Contains(item.ResultStatusId));
+        if (resultNotRunning)
         {
             throw new SettledException { StopLoop = true };
         }
