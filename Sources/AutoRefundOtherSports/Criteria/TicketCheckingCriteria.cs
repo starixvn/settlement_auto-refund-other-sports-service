@@ -7,7 +7,7 @@ namespace AutoRefundOtherSports.Criteria
     {
         public int MatchId { get; set; }
 
-        public int TypeId { get; set; }
+        public int SportType { get; set; }
 
         public string ResourceIds { get; set; }
 

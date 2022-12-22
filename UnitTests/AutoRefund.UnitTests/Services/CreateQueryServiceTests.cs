@@ -78,13 +78,13 @@ public class CreateQueryServiceTests
     [Fact]
     public void CreateQueryCheckTicketRunning_Always_ReturnsExpectedData()
     {
-        match.TypeId = 1;
+        match.SportType = 9;
         match.ResultDetails.Add(new ResultDetail { ResourceId = "0102" });
         var criteria = new TicketCheckingCriteria
         {
             MatchId = 1,
             ResourceIds = "0101,0102",
-            TypeId = 1,
+            SportType = 9,
         };
 
         var result = service.CreateQueryCheckTicketRunning(match);

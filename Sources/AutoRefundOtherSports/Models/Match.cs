@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace AutoRefundOtherSports.Models
+﻿namespace AutoRefundOtherSports.Models
 {
     public class Match
     {
@@ -9,6 +7,8 @@ namespace AutoRefundOtherSports.Models
         public int LeagueId { get; set; }
 
         public int TypeId { get; set; }
+
+        public int SportType { get; set; }
 
         public List<ResultDetail> ResultDetails { get; set; }
 

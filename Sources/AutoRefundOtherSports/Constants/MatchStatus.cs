@@ -1,4 +1,4 @@
-﻿namespace AutoRefundOtherSports.Models
+﻿namespace AutoRefundOtherSports.Constants
 {
     public static class MatchStatus
     {

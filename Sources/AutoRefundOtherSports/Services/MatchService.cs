@@ -1,4 +1,5 @@
-﻿using Fanex.Caching;
+﻿using AutoRefundOtherSports.Constants;
+using Fanex.Caching;
 using Fanex.Data.Repository;
 using Microsoft.Extensions.Options;
 
@@ -50,8 +51,11 @@ public class MatchServiceImp : IMatchService
 
     public async Task<List<Match>> GetMatches()
     {
-        var resultDetails = (await repository.FetchAsync<ResultDetail>(new ResultListingCriteria())).ToList();
-        var matches = GroupMatch(resultDetails);
+        var resultDetails = (await repository.FetchAsync<ResultDetail>(new ResultListingCriteria { SportType = SportType.Badminton })).ToList();
+        var resultDetailsVolleyball = (await repository.FetchAsync<ResultDetail>(new ResultListingCriteria { SportType = SportType.Volleyball })).ToList();
+        var matchVolleyball = GroupMatch(resultDetailsVolleyball, SportType.Volleyball);
+        var matches = GroupMatch(resultDetails, SportType.Badminton);
+        matches.AddRange(matchVolleyball);
 
         cache.TryGet(KeyLeagueId, out int leagueId);
 
@@ -65,7 +69,7 @@ public class MatchServiceImp : IMatchService
         };
     }
 
-    private static List<Match> GroupMatch(List<ResultDetail> resultDetails)
+    private static List<Match> GroupMatch(List<ResultDetail> resultDetails, int sportType)
     {
         var matches = resultDetails.GroupBy(result => new { result.MatchId, result.LeagueId, result.TypeId })
             .Select(match => new Match
@@ -73,6 +77,7 @@ public class MatchServiceImp : IMatchService
                 MatchId = match.Key.MatchId,
                 LeagueId = match.Key.LeagueId,
                 TypeId = match.Key.TypeId,
+                SportType = sportType,
                 ResultDetails = match.ToList()
             }).ToList();
 

@@ -4,7 +4,7 @@ namespace AutoRefundOtherSports.Criteria
 {
     public class ResultListingCriteria : CriteriaBase
     {
-        public int SportType { get; } = 9;
+        public int SportType { get; set; }
 
         public override bool IsValid()
         {

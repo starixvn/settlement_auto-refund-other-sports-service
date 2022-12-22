@@ -1,4 +1,5 @@
-﻿using Fanex.Caching;
+﻿using AutoRefundOtherSports.Constants;
+using Fanex.Caching;
 using Fanex.Caching.Redis;
 using Microsoft.Extensions.Options;
 
@@ -73,11 +74,22 @@ public class MatchServiceTests
     public async Task GetMatches_NotExistLeagueTest_ReturnAllMatches()
     {
         SetLeague(0);
-        repository.FetchAsync<ResultDetail>(Arg.Any<ResultListingCriteria>()).Returns(resultDetails);
+        repository.FetchAsync<ResultDetail>(Arg.Is<ResultListingCriteria>(i => i.SportType == SportType.Volleyball)).Returns(resultDetails);
 
         var list = await service.GetMatches();
 
         Assert.Equal(2, list.Count);
+    }
+
+    [Fact]
+    public async Task GetMatches_Always_ReturnAllMatchesTwoSport()
+    {
+        SetLeague(0);
+        repository.FetchAsync<ResultDetail>(Arg.Any<ResultListingCriteria>()).Returns(resultDetails);
+
+        var list = await service.GetMatches();
+
+        Assert.Equal(4, list.Count);
     }
 
     [Fact]
@@ -110,7 +122,7 @@ public class MatchServiceTests
 
         var appSettingsOptions = Options.Create(settings);
         var tempService = new MatchServiceImp(repository, cache, appSettingsOptions, createQueryService, loggingService, settleService);
-        repository.FetchAsync<ResultDetail>(Arg.Any<ResultListingCriteria>()).Returns(resultDetails);
+        repository.FetchAsync<ResultDetail>(Arg.Is<ResultListingCriteria>(i => i.SportType == SportType.Volleyball)).Returns(resultDetails);
 
         var list = await tempService.GetMatches();
 

@@ -73,7 +73,7 @@ public class CreateQueryServiceImp : ICreateQueryService
         return new TicketCheckingCriteria
         {
             MatchId = match.MatchId,
-            TypeId = match.TypeId,
+            SportType = match.SportType,
             ResourceIds = string.Join(",", match.ResultDetails.Where(item => item.SettlementStatusId != StatusRefunded).Select(item => item.ResourceId).ToList())
         };
     }
