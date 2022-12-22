@@ -3,9 +3,9 @@ using AutoRefundOtherSports.Services;
 using Fanex.Caching;
 using Fanex.Caching.Redis;
 using Fanex.Data.Repository;
+using Fanex.Settlement.Converter.Services;
 using Fanex.Settlement.ScaleOut;
 using Fanex.Settlement.ScaleOut.Services;
-using Kaden.XmlConverter;
 using Microsoft.AspNetCore.Http;
 using ONEbook.UM.AspNetCore;
 using ONEbook.UM.Configurations;
@@ -63,7 +63,7 @@ public static class AutoRefundInjector
             mc.AddProfile(typeof(ScaleOutMappingProfile));
         });
 
-        IMapper mapper = mapperConfig.CreateMapper();
+        var mapper = mapperConfig.CreateMapper();
         service.AddSingleton(mapper);
     }
 }

@@ -1,19 +1,18 @@
 ﻿using System.Xml.Serialization;
 
-namespace AutoRefundOtherSports.Models
+namespace AutoRefundOtherSports.Models;
+
+public class ResourceItem
 {
-    public class ResourceItem
+    public ResourceItem()
     {
-        public ResourceItem()
-        {
-        }
+    }
 
-        [XmlAttribute("Id")]
-        public string ResourceId { get; set; }
+    [XmlAttribute("Id")]
+    public string ResourceId { get; set; }
 
-        public ResourceItem(string id)
-        {
-            ResourceId = id;
-        }
+    public ResourceItem(string id)
+    {
+        ResourceId = id;
     }
 }

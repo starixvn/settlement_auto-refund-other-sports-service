@@ -1,29 +1,27 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace AutoRefundOtherSports.Exceptions
+namespace AutoRefundOtherSports.Exceptions;
+
+[Serializable]
+public class TicketExclusionException : AutoRefundException
 {
-    [Serializable]
-    public class TicketExclusionException : AutoRefundException
+    public TicketExclusionException()
     {
-        public TicketExclusionException()
-        {
-            Description = "ERROR! Cannot proceed due to marked tickets. Please unmark them and try again.";
-        }
+        Description = "ERROR! Cannot proceed due to marked tickets. Please unmark them and try again.";
+    }
 
-        public TicketExclusionException(string message)
-            : base(message)
-        {
-        }
+    public TicketExclusionException(string message)
+        : base(message)
+    {
+    }
 
-        public TicketExclusionException(string message, Exception innerException)
-            : base(message, innerException)
-        {
-        }
+    public TicketExclusionException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+    }
 
-        protected TicketExclusionException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
+    protected TicketExclusionException(SerializationInfo info, StreamingContext context)
+        : base(info, context)
+    {
     }
 }

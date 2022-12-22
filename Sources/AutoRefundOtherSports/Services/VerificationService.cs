@@ -11,9 +11,9 @@ public interface IVerificationService
 
 public class VerificationServiceImp : IVerificationService
 {
-    private readonly byte settlementStatusCalculated = 4;
+    private const byte SettlementStatusCalculated = 4;
 
-    private readonly byte resultStatusUnCalculate = 4;
+    private const byte ResultStatusUnCalculate = 4;
 
     private readonly IVerificationStatusService verificationStatusService;
 
@@ -29,7 +29,7 @@ public class VerificationServiceImp : IVerificationService
             return;
         }
 
-        var resultNotRunning = match.ResultDetails.Exists(item => item.SettlementStatusId == settlementStatusCalculated || item.ResultStatusId == resultStatusUnCalculate);
+        var resultNotRunning = match.ResultDetails.Exists(item => item.SettlementStatusId == SettlementStatusCalculated || item.ResultStatusId == ResultStatusUnCalculate);
         if (resultNotRunning)
         {
             throw new SettledException { StopLoop = true };
