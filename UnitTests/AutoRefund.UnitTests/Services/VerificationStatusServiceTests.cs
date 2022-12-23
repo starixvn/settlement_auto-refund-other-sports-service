@@ -39,25 +39,11 @@ public class VerificationStatusServiceTests
             MatchId = 1,
             ResultDetails = new List<ResultDetail>
                 {
-                    new ResultDetail()
+                    new ()
                 }
         };
         await repository.ExecuteAsync(Arg.Do<CheckMarkedTicketsCriteria>(item => item.IsExistMarkedTicket = true));
         var result = await service.CheckTicketExclusion(match);
         Assert.True(result);
-    }
-
-    [Fact]
-    public async Task CheckTicketSettled_Always_ResultCriteria()
-    {
-        var criteria = new TicketCheckingCriteria();
-        createQueryService.CreateQueryCheckTicketRunning(Arg.Any<Match>()).Returns(criteria);
-        repository.When(fake => fake.ExecuteAsync(criteria)).Do(call =>
-        {
-            criteria.ErrCode = 1;
-        });
-
-        var result = await service.CheckTicketSettled(new Match());
-        Assert.Equal(criteria, result);
     }
 }

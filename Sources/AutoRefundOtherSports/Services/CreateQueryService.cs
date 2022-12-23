@@ -38,10 +38,9 @@ public class CreateQueryServiceImp : ICreateQueryService
 
     private string CreateResources(List<ResultDetail> selectedResources)
     {
-        var resultRunning = selectedResources.Where(item => item.SettlementStatusId != StatusRefunded);
         var resources = new Resources<ResultDetail>
         {
-            ResourceItems = resultRunning.ToList()
+            ResourceItems = selectedResources
         };
 
         return xmlConvertService.Serialize(resources);

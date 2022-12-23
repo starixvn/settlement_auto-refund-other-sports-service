@@ -9,11 +9,11 @@ public interface IMatchService
 {
     Task<List<Match>> GetMatches();
 
-    Task Update(Match match, string remark, int status);
-
     Task Push(Match match);
 
     Task CheckMissedMatch();
+
+    Task HandleAutoRefundException(Match match, AutoRefundException exception);
 }
 
 public class MatchServiceImp : IMatchService
@@ -25,8 +25,6 @@ public class MatchServiceImp : IMatchService
     private readonly ICache cache;
 
     private readonly AppSettingsKey appSettingsKey;
-
-    private readonly ICreateQueryService createQueryService;
 
     private readonly ILoggingService loggingService;
 
@@ -44,7 +42,6 @@ public class MatchServiceImp : IMatchService
         this.repository = repository;
         this.cache = cache;
         this.appSettingsKey = appSettingsKey.Value;
-        this.createQueryService = createQueryService;
         this.loggingService = loggingService;
         this.settleService = settleService;
     }
@@ -53,8 +50,8 @@ public class MatchServiceImp : IMatchService
     {
         var resultDetails = (await repository.FetchAsync<ResultDetail>(new ResultListingCriteria { SportType = SportType.Badminton })).ToList();
         var resultDetailsVolleyball = (await repository.FetchAsync<ResultDetail>(new ResultListingCriteria { SportType = SportType.Volleyball })).ToList();
-        var matchVolleyball = GroupMatch(resultDetailsVolleyball, SportType.Volleyball);
-        var matches = GroupMatch(resultDetails, SportType.Badminton);
+        var matchVolleyball = GroupMatch(resultDetailsVolleyball);
+        var matches = GroupMatch(resultDetails);
         matches.AddRange(matchVolleyball);
 
         cache.TryGet(KeyLeagueId, out int leagueId);
@@ -69,7 +66,7 @@ public class MatchServiceImp : IMatchService
         };
     }
 
-    private static List<Match> GroupMatch(List<ResultDetail> resultDetails, int sportType)
+    private static List<Match> GroupMatch(List<ResultDetail> resultDetails)
     {
         var matches = resultDetails.GroupBy(result => new { result.MatchId, result.LeagueId, result.TypeId })
             .Select(match => new Match
@@ -77,18 +74,10 @@ public class MatchServiceImp : IMatchService
                 MatchId = match.Key.MatchId,
                 LeagueId = match.Key.LeagueId,
                 TypeId = match.Key.TypeId,
-                SportType = sportType,
                 ResultDetails = match.ToList()
             }).ToList();
 
         return matches;
-    }
-
-    public async Task Update(Match match, string remark, int status)
-    {
-        var criteria = createQueryService.QueryUpdateResult(match, remark, status);
-
-        await repository.ExecuteAsync(criteria);
     }
 
     public async Task Push(Match match)
@@ -113,7 +102,7 @@ public class MatchServiceImp : IMatchService
         else
         {
             await loggingService.WriteLog(match, result.ErrMsg);
-            await Update(match, result.ErrMsg, MatchStatus.Failed);
+            await loggingService.Update(match, result.ErrMsg, MatchStatus.Failed);
         }
     }
 
@@ -124,6 +113,12 @@ public class MatchServiceImp : IMatchService
             StatusId = MatchStatus.Failed
         };
         await repository.ExecuteAsync(criteria);
+    }
+
+    public async Task HandleAutoRefundException(Match match, AutoRefundException exception)
+    {
+        await loggingService.WriteLog(match, exception);
+        await loggingService.Update(match, exception.Description, MatchStatus.Failed);
     }
 
     private async Task SettleHedgeMatch(Match match)

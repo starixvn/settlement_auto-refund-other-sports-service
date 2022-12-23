@@ -138,18 +138,6 @@ public class MatchServiceTests
     }
 
     [Fact]
-    public async Task UpdateRemark_Always_ExecuteCriteria()
-    {
-        var criteria = new UpdateResultStatusCriteria();
-        createQueryService.QueryUpdateResult(Arg.Any<Match>(), Arg.Any<string>(), Arg.Any<int>())
-            .Returns(criteria);
-
-        await service.Update(new Match(), "", 0);
-
-        await repository.Received().ExecuteAsync(criteria);
-    }
-
-    [Fact]
     public async Task Push_SettleFailed_LogFailedAndUpdateStatus()
     {
         var match = new Match();
@@ -162,7 +150,7 @@ public class MatchServiceTests
         await service.Push(match);
 
         await loggingService.Received().WriteLog(match, "Error");
-        createQueryService.Received().QueryUpdateResult(match, Arg.Any<string>(), 3);
+        await loggingService.Received().Update(match, Arg.Any<string>(), 3);
     }
 
     [Fact]

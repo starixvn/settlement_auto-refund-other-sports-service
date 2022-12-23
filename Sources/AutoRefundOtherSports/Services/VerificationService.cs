@@ -1,10 +1,12 @@
-﻿using AutoRefundOtherSports.Exceptions;
+﻿using AutoRefundOtherSports.Constants;
+using AutoRefundOtherSports.Exceptions;
+using Microsoft.Extensions.Options;
 
 namespace AutoRefundOtherSports.Services;
 
 public interface IVerificationService
 {
-    Task VerifyResultRunning(Match match, int retryIndex);
+    void VerifyResultRunning(Match match);
 
     Task VerifyResultStatus(Match match);
 }
@@ -17,43 +19,64 @@ public class VerificationServiceImp : IVerificationService
 
     private readonly IVerificationStatusService verificationStatusService;
 
-    public VerificationServiceImp(IVerificationStatusService verificationStatusService)
+    private readonly AppSettingsKey appSettingsKey;
+
+    private readonly ILoggingService loggingService;
+
+    public VerificationServiceImp(IVerificationStatusService verificationStatusService,
+        IOptions<AppSettingsKey> appSettingsKey,
+        ILoggingService loggingService)
     {
+        this.appSettingsKey = appSettingsKey.Value;
         this.verificationStatusService = verificationStatusService;
+        this.loggingService = loggingService;
     }
 
-    public async Task VerifyResultRunning(Match match, int retryIndex)
+    public void VerifyResultRunning(Match match)
     {
-        if (retryIndex > 0)
-        {
-            return;
-        }
-
         var resultNotRunning = match.ResultDetails.Exists(item => item.SettlementStatusId == SettlementStatusCalculated || item.ResultStatusId == ResultStatusUnCalculate);
         if (resultNotRunning)
         {
-            throw new SettledException { StopLoop = true };
-        }
-
-        var resultCheckingTicket = await verificationStatusService.CheckTicketSettled(match);
-        if (resultCheckingTicket.ErrCode > 0)
-        {
-            throw new AutoRefundException { Description = resultCheckingTicket.ErrMsg, StopLoop = true };
+            throw new SettledException();
         }
     }
 
     public async Task VerifyResultStatus(Match match)
     {
-        var resultCheckingOdds = await verificationStatusService.CheckRunningOdds(match);
-        if (resultCheckingOdds.ErrCode > 0)
+        for (var i = 0; i < appSettingsKey.RetryCount; i++)
         {
-            throw new AutoRefundException(resultCheckingOdds.ErrMsg);
-        }
+            if (i > 0)
+            {
+                await Task.Delay(appSettingsKey.RetryInterval);
+            }
 
-        var isExistMarkedTicket = await verificationStatusService.CheckTicketExclusion(match);
-        if (isExistMarkedTicket)
+            var resultCheckingOdds = await verificationStatusService.CheckRunningOdds(match);
+            if (resultCheckingOdds.ErrCode > 0)
+            {
+                await CheckException(match, i);
+                continue;
+            }
+
+            var isExistMarkedTicket = await verificationStatusService.CheckTicketExclusion(match);
+            if (isExistMarkedTicket)
+            {
+                await CheckException(match, i);
+                continue;
+            }
+
+            return;
+        }
+    }
+
+    private async Task CheckException(Match match, int retryTime)
+    {
+        if (retryTime < appSettingsKey.RetryCount - 1)
         {
-            throw new TicketExclusionException();
+            await loggingService.Update(match, (new OddsAndMarkedTicketException()).Description, MatchStatus.Running);
+        }
+        else
+        {
+            throw new OddsAndMarkedTicketException();
         }
     }
 }

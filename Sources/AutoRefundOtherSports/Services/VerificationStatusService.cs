@@ -8,8 +8,6 @@ public interface IVerificationStatusService
     Task<CheckOddsCriteria> CheckRunningOdds(Match match);
 
     Task<Boolean> CheckTicketExclusion(Match match);
-
-    Task<TicketCheckingCriteria> CheckTicketSettled(Match match);
 }
 
 public class VerificationStatusServiceImp : IVerificationStatusService
@@ -58,22 +56,5 @@ public class VerificationStatusServiceImp : IVerificationStatusService
         }
 
         return false;
-    }
-
-    public async Task<TicketCheckingCriteria> CheckTicketSettled(Match match)
-    {
-        var criteria = createQueryService.CreateQueryCheckTicketRunning(match);
-
-        foreach (var server in appSettingsKey.SiteDbServer)
-        {
-            criteria.DbServer = server;
-            await repository.ExecuteAsync(criteria);
-            if (criteria.ErrCode > 0)
-            {
-                return criteria;
-            }
-        }
-
-        return criteria;
     }
 }

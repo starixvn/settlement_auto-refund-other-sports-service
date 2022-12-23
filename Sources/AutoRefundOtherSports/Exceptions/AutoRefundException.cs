@@ -26,6 +26,4 @@ public class AutoRefundException : Exception
     }
 
     public string Description { get; set; }
-
-    public bool StopLoop { get; set; }
 }

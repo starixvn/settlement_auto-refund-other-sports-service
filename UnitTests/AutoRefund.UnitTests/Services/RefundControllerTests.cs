@@ -1,5 +1,4 @@
 ﻿using AutoRefundOtherSports;
-using Microsoft.Extensions.Options;
 
 namespace AutoRefund.UnitTests.Services;
 
@@ -22,58 +21,31 @@ public class RefundControllerTests
         matchService = Substitute.For<IMatchService>();
         loggingService = Substitute.For<ILoggingService>();
 
-        var appSettings = new AppSettingsKey()
-        {
-            RetryInterval = 500,
-            RetryCount = 5
-        };
-        var appSettingsOptions = Options.Create(appSettings);
-        controller = new RefundControllerImp(matchService, verificationService, matchPoolService, loggingService, appSettingsOptions);
+        controller = new RefundControllerImp(matchService, verificationService, matchPoolService, loggingService);
     }
 
     [Fact]
-    public async Task Process_NoExceptionHaveBeenThrown_PushMatchSucceedAndRemoveMatch()
+    public async Task Process_PassedValidated_SettleMatch()
     {
         var match = new Match();
-        verificationService.When(fake => fake.VerifyResultRunning(match, 0)).Do(call => { });
-        verificationService.When(fake => fake.VerifyResultStatus(match)).Do(call => { });
 
         await controller.Process(match);
 
         await matchService.Received().Push(match);
-        matchPoolService.Received().RemoveMatch(match);
-        await matchService.DidNotReceive().Update(match, Arg.Any<string>(), 3);
-    }
-
-    [Fact]
-    public async Task Process_ThrowExceptionOnVerifyMatchAndTimeMax_InvokeRelatedMethods()
-    {
-        var match = new Match();
-        verificationService.When(fake => fake.VerifyResultRunning(match, 0)).Do(call => { });
-        verificationService.When(fake => fake.VerifyResultStatus(match)).Do(call =>
-        {
-            throw new AutoRefundException();
-        });
-
-        await controller.Process(match);
-
-        await matchService.DidNotReceive().Push(match);
-        await matchService.Received(7).Update(Arg.Any<Match>(), Arg.Any<string>(), Arg.Any<int>());
-        await loggingService.Received().WriteLog(match, Arg.Any<AutoRefundException>());
+        await matchService.DidNotReceive().HandleAutoRefundException(Arg.Any<Match>(), Arg.Any<AutoRefundException>());
         matchPoolService.Received().RemoveMatch(match);
     }
 
     [Fact]
-    public async Task Process_ThrowExceptionStopLoop_InvokeRelatedMethodsAndStopLoop()
+    public async Task Process_ThrowException_InvokeRelatedMethodsAndStopLoop()
     {
         var match = new Match();
-        verificationService.When(fake => fake.VerifyResultRunning(match, 0)).Do(call => { throw new AutoRefundException { StopLoop = true }; });
+        verificationService.When(fake => fake.VerifyResultRunning(match)).Do(call => { throw new AutoRefundException(); });
 
         await controller.Process(match);
 
         await matchService.DidNotReceive().Push(match);
-        await matchService.Received(2).Update(Arg.Any<Match>(), Arg.Any<string>(), Arg.Any<int>());
-        await loggingService.Received().WriteLog(match, Arg.Any<AutoRefundException>());
+        await matchService.Received().HandleAutoRefundException(Arg.Any<Match>(), Arg.Any<AutoRefundException>());
         matchPoolService.Received().RemoveMatch(match);
     }
 }

@@ -29,9 +29,8 @@ public class CreateQueryServiceTests
     }
 
     [Fact]
-    public void QuerySettle_Always_SettleResultRunning()
+    public void QuerySettle_Always_SettleResult()
     {
-        match.ResultDetails.Add(new ResultDetail { SettlementStatusId = 1, ResourceId = "0102" });
         var criteria = new SettleCriteria
         {
             MatchId = 1,
