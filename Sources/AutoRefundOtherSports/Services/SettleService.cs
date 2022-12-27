@@ -81,6 +81,7 @@ public class SettleServiceImp : SettleService
             AdminId = criteria.AdminId,
             MatchId = criteria.MatchId,
             SelectedResources = criteria.SelectedResources,
+            IsAuto = criteria.IsAuto,
         };
 
         await scaleOutSettleService.UpdateMatchInfo(requestUpdateInfo);

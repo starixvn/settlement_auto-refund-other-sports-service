@@ -12,9 +12,5 @@ public class AppSettingsKey
 
     public string EnvironmentName { get; set; }
 
-    public string DeploymentDelay { get; set; }
-
-    public string DeploymentSpName { get; set; }
-
     public List<string> SiteDbServer { get; set; }
 }

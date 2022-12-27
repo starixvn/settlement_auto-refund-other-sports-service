@@ -74,7 +74,7 @@ public class AutoRefundOtherSports : IHostedService
             if (!isMaintenance)
             {
                 await MainProcess();
-                await Task.Delay(int.Parse(configuration.GetSection("ServiceInterval").Value), cancellationToken);
+                await Task.Delay(int.Parse(configuration.GetSection("ServiceInterval").Value));
             }
         }
     }

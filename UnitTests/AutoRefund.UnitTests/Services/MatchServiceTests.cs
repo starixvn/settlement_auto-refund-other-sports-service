@@ -11,8 +11,6 @@ public class MatchServiceTests
 
     private readonly ICache cache;
 
-    private readonly ICreateQueryService createQueryService;
-
     private readonly IMatchService service;
 
     private readonly ILoggingService loggingService;
@@ -24,7 +22,6 @@ public class MatchServiceTests
     public MatchServiceTests()
     {
         repository = Substitute.For<IDynamicRepository>();
-        createQueryService = Substitute.For<ICreateQueryService>();
         loggingService = Substitute.For<ILoggingService>();
         settleService = Substitute.For<SettleService>();
         cache = new RedisCache(new RedisCacheOptions
@@ -48,7 +45,7 @@ public class MatchServiceTests
                 new ResultDetail() { MatchId = 2, LeagueId = 1, ResourceId = "0101" }
             };
 
-        service = new MatchServiceImp(repository, cache, appSettingsOptions, createQueryService, loggingService, settleService);
+        service = new MatchServiceImp(repository, cache, appSettingsOptions, loggingService, settleService);
     }
 
     private void SetLeague(int leagueId)
@@ -102,7 +99,7 @@ public class MatchServiceTests
 
         var appSettingsOptions = Options.Create(settings);
 
-        var tempService = new MatchServiceImp(repository, cache, appSettingsOptions, createQueryService, loggingService, settleService);
+        var tempService = new MatchServiceImp(repository, cache, appSettingsOptions, loggingService, settleService);
         SetLeague(123);
 
         repository.FetchAsync<ResultDetail>(Arg.Any<ResultListingCriteria>()).Returns(resultDetails);
@@ -121,7 +118,7 @@ public class MatchServiceTests
         };
 
         var appSettingsOptions = Options.Create(settings);
-        var tempService = new MatchServiceImp(repository, cache, appSettingsOptions, createQueryService, loggingService, settleService);
+        var tempService = new MatchServiceImp(repository, cache, appSettingsOptions, loggingService, settleService);
         repository.FetchAsync<ResultDetail>(Arg.Is<ResultListingCriteria>(i => i.SportType == SportType.Volleyball)).Returns(resultDetails);
 
         var list = await tempService.GetMatches();
@@ -166,22 +163,21 @@ public class MatchServiceTests
     }
 
     [Fact]
-    public async Task Push_ReturnDeployError_SetCache()
+    public async Task Push_ReturnDeployError_UpdateMatch()
     {
         var settings = new AppSettingsKey()
         {
-            DeploymentDelay = "2",
-            DeploymentSpName = "Deploy"
+            DeploymentDelay = "2"
         };
 
         var appSettingsOptions = Options.Create(settings);
         var tempCache = Substitute.For<ICache>();
-        var newService = new MatchServiceImp(repository, tempCache, appSettingsOptions, createQueryService, loggingService, settleService);
+        var newService = new MatchServiceImp(repository, tempCache, appSettingsOptions, loggingService, settleService);
         var match = new Match { MatchId = 1 };
         settleService.SettleMatch(Arg.Any<Match>()).Returns(new Result { ErrCode = 99 });
 
         await newService.Push(match);
 
-        await tempCache.Received().SetAsync("Deploy", 1, Arg.Any<CacheItemOptions>());
+        await loggingService.Received().Update(Arg.Any<Match>(), "", MatchStatus.Initial);
     }
 }

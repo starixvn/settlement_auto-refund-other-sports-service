@@ -35,7 +35,6 @@ public class MatchServiceImp : IMatchService
     public MatchServiceImp(IDynamicRepository repository,
         ICache cache,
         IOptions<AppSettingsKey> appSettingsKey,
-        ICreateQueryService createQueryService,
         ILoggingService loggingService,
         SettleService settleService)
     {
@@ -83,14 +82,7 @@ public class MatchServiceImp : IMatchService
     public async Task Push(Match match)
     {
         var result = await settleService.SettleMatch(match);
-        if (result.ErrCode == DeploymentError)
-        {
-            await SetFlagDeploySpName();
-        }
-        else
-        {
-            await SettleHedgeMatchOrWriteLog(match, result);
-        }
+        await SettleHedgeMatchOrWriteLog(match, result);
     }
 
     private async Task SettleHedgeMatchOrWriteLog(Match match, Result result)
@@ -98,6 +90,10 @@ public class MatchServiceImp : IMatchService
         if (result.IsSuccessful)
         {
             await SettleHedgeMatch(match);
+        }
+        else if (result.ErrCode == DeploymentError)
+        {
+            await loggingService.Update(match, "", MatchStatus.Initial);
         }
         else
         {
@@ -139,11 +135,5 @@ public class MatchServiceImp : IMatchService
     {
         var criteria = new GetHedgeMatchCriteria { MatchId = matchId };
         return await repository.GetAsync<HedgeMatchDetail>(criteria);
-    }
-
-    private async Task SetFlagDeploySpName()
-    {
-        var cachePolicy = new CacheItemOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(int.Parse(appSettingsKey.DeploymentDelay)));
-        await cache.SetAsync(appSettingsKey.DeploymentSpName, 1, cachePolicy);
     }
 }
