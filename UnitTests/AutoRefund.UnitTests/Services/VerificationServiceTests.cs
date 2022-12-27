@@ -18,7 +18,7 @@ public class VerificationServiceTests
         var appSettings = new AppSettingsKey
         {
             RetryCount = 5,
-            RetryInterval = 100
+            RetryInterval = 300
         };
         var options = Options.Create(appSettings);
         service = new VerificationServiceImp(verificationStatusService, options, loggingService);
@@ -72,7 +72,7 @@ public class VerificationServiceTests
         verificationStatusService.CheckRunningOdds(match).Returns(new CheckOddsCriteria { ErrCode = 1 });
 
         await Assert.ThrowsAsync<OddsAndMarkedTicketException>(() => service.VerifyResultStatus(match));
-        await verificationStatusService.Received(5).CheckRunningOdds(match);
+        await verificationStatusService.Received(6).CheckRunningOdds(match);
         await verificationStatusService.DidNotReceive().CheckTicketExclusion(Arg.Any<Match>());
     }
 

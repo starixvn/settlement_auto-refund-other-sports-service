@@ -1,5 +1,4 @@
-﻿using AutoRefundOtherSports.Constants;
-using AutoRefundOtherSports.Exceptions;
+﻿using AutoRefundOtherSports.Exceptions;
 using Microsoft.Extensions.Options;
 
 namespace AutoRefundOtherSports.Services;
@@ -43,40 +42,22 @@ public class VerificationServiceImp : IVerificationService
 
     public async Task VerifyResultStatus(Match match)
     {
-        for (var i = 0; i < appSettingsKey.RetryCount; i++)
+        for (var i = 0; i < appSettingsKey.RetryCount + 1; i++)
         {
-            if (i > 0)
+            var resultCheckingOdds = await verificationStatusService.CheckRunningOdds(match);
+            if (resultCheckingOdds.ErrCode == 0 && !(await verificationStatusService.CheckTicketExclusion(match)))
+            {
+                return;
+            }
+
+            if (i < appSettingsKey.RetryCount)
             {
                 await Task.Delay(appSettingsKey.RetryInterval);
             }
-
-            var resultCheckingOdds = await verificationStatusService.CheckRunningOdds(match);
-            if (resultCheckingOdds.ErrCode > 0)
+            else
             {
-                await CheckException(match, i);
-                continue;
+                throw new OddsAndMarkedTicketException();
             }
-
-            var isExistMarkedTicket = await verificationStatusService.CheckTicketExclusion(match);
-            if (isExistMarkedTicket)
-            {
-                await CheckException(match, i);
-                continue;
-            }
-
-            return;
-        }
-    }
-
-    private async Task CheckException(Match match, int retryTime)
-    {
-        if (retryTime < appSettingsKey.RetryCount - 1)
-        {
-            await loggingService.Update(match, (new OddsAndMarkedTicketException()).Description, MatchStatus.Running);
-        }
-        else
-        {
-            throw new OddsAndMarkedTicketException();
         }
     }
 }
