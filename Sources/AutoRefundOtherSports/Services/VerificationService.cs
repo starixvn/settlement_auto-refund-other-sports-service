@@ -45,7 +45,7 @@ public class VerificationServiceImp : IVerificationService
         for (var i = 0; i < appSettingsKey.RetryCount + 1; i++)
         {
             var resultCheckingOdds = await verificationStatusService.CheckRunningOdds(match);
-            if (resultCheckingOdds.ErrCode == 0 && !(await verificationStatusService.CheckTicketExclusion(match)))
+            if (resultCheckingOdds.ErrCode == 0 && !(await verificationStatusService.IsExistMarkedTicket(match)))
             {
                 return;
             }

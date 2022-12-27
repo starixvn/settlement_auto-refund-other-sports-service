@@ -43,7 +43,7 @@ public class VerificationStatusServiceTests
                 }
         };
         await repository.ExecuteAsync(Arg.Do<CheckMarkedTicketsCriteria>(item => item.IsExistMarkedTicket = true));
-        var result = await service.CheckTicketExclusion(match);
+        var result = await service.IsExistMarkedTicket(match);
         Assert.True(result);
     }
 }

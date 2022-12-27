@@ -5,19 +5,19 @@ namespace AutoRefundOtherSports.Services;
 
 public interface IMaintenanceService
 {
-    Task<bool> IsMaintenance();
+    bool IsMaintenance();
 }
 
 public class MaintenanceServiceImp : IMaintenanceService
 {
-    public async Task<bool> IsMaintenance()
+    public bool IsMaintenance()
     {
         var maintenanceService = new MaintenanceService(
             UMClientManager.RestClient,
             UMClientManager.CacheService,
             UMClientManager.UMClientConfigs);
 
-        var downTime = await maintenanceService.GetUnderMaintenanceTimeAsync();
+        var downTime = maintenanceService.GetUnderMaintenanceTime();
 
         return downTime.IsUnderMaintenanceTime;
     }

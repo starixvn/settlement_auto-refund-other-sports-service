@@ -165,18 +165,10 @@ public class MatchServiceTests
     [Fact]
     public async Task Push_ReturnDeployError_UpdateMatch()
     {
-        var settings = new AppSettingsKey()
-        {
-            DeploymentDelay = "2"
-        };
-
-        var appSettingsOptions = Options.Create(settings);
-        var tempCache = Substitute.For<ICache>();
-        var newService = new MatchServiceImp(repository, tempCache, appSettingsOptions, loggingService, settleService);
         var match = new Match { MatchId = 1 };
-        settleService.SettleMatch(Arg.Any<Match>()).Returns(new Result { ErrCode = 99 });
+        settleService.SettleMatch(Arg.Any<Match>()).Returns(new Result { ErrCode = 99, ErrMsg = "Deploy" });
 
-        await newService.Push(match);
+        await service.Push(match);
 
         await loggingService.Received().Update(Arg.Any<Match>(), "", MatchStatus.Initial);
     }

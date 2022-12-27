@@ -7,7 +7,7 @@ public interface IVerificationStatusService
 {
     Task<CheckOddsCriteria> CheckRunningOdds(Match match);
 
-    Task<Boolean> CheckTicketExclusion(Match match);
+    Task<Boolean> IsExistMarkedTicket(Match match);
 }
 
 public class VerificationStatusServiceImp : IVerificationStatusService
@@ -37,7 +37,7 @@ public class VerificationStatusServiceImp : IVerificationStatusService
         return criteria;
     }
 
-    public async Task<Boolean> CheckTicketExclusion(Match match)
+    public async Task<Boolean> IsExistMarkedTicket(Match match)
     {
         var criteria = new CheckMarkedTicketsCriteria
         {

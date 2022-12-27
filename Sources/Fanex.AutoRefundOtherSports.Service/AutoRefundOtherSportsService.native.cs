@@ -64,17 +64,23 @@ public class AutoRefundOtherSports : IHostedService
         });
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
         running = true;
+        var autoRefundThread = new Thread(RefundThreadProcess);
         Console.WriteLine($"AutoRefund Other Sports Service Starting at {DateTime.Now}");
+        autoRefundThread.Start();
+        return Task.CompletedTask;
+    }
+
+    private void RefundThreadProcess()
+    {
         while (running)
         {
-            var isMaintenance = await maintenanceService.IsMaintenance();
-            if (!isMaintenance)
+            if (!maintenanceService.IsMaintenance())
             {
-                await MainProcess();
-                await Task.Delay(int.Parse(configuration.GetSection("ServiceInterval").Value));
+                MainProcess();
+                Thread.Sleep(int.Parse(configuration.GetSection("ServiceInterval").Value));
             }
         }
     }
@@ -86,17 +92,17 @@ public class AutoRefundOtherSports : IHostedService
         return Task.CompletedTask;
     }
 
-    private async Task MainProcess()
+    private void MainProcess()
     {
         try
         {
-            await autoRefundController.ProcessAsync();
+            autoRefundController.ProcessAsync();
             HandleMissedMatch();
             HandleGarbageCollector();
         }
         catch (Exception exception)
         {
-            await LogService.ErrorAsync("Exception in main thread - Process:", exception);
+            LogService.ErrorAsync("Exception in main thread - Process:", exception);
         }
     }
 

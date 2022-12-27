@@ -73,7 +73,7 @@ public class VerificationServiceTests
 
         await Assert.ThrowsAsync<OddsAndMarkedTicketException>(() => service.VerifyResultStatus(match));
         await verificationStatusService.Received(6).CheckRunningOdds(match);
-        await verificationStatusService.DidNotReceive().CheckTicketExclusion(Arg.Any<Match>());
+        await verificationStatusService.DidNotReceive().IsExistMarkedTicket(Arg.Any<Match>());
     }
 
     [Fact]
@@ -81,11 +81,11 @@ public class VerificationServiceTests
     {
         var match = new Match();
         verificationStatusService.CheckRunningOdds(match).Returns(new CheckOddsCriteria());
-        verificationStatusService.CheckTicketExclusion(match).Returns(true);
+        verificationStatusService.IsExistMarkedTicket(match).Returns(true);
 
         await Assert.ThrowsAsync<OddsAndMarkedTicketException>(() => service.VerifyResultStatus(match));
-        await verificationStatusService.Received(5).CheckRunningOdds(match);
-        await verificationStatusService.Received(5).CheckTicketExclusion(Arg.Any<Match>());
+        await verificationStatusService.Received(6).CheckRunningOdds(match);
+        await verificationStatusService.Received(6).IsExistMarkedTicket(Arg.Any<Match>());
     }
 
     [Fact]
@@ -93,11 +93,11 @@ public class VerificationServiceTests
     {
         var match = new Match();
         verificationStatusService.CheckRunningOdds(match).Returns(new CheckOddsCriteria());
-        verificationStatusService.CheckTicketExclusion(match).Returns(false);
+        verificationStatusService.IsExistMarkedTicket(match).Returns(false);
 
         var exception = await Record.ExceptionAsync(() => service.VerifyResultStatus(match));
         Assert.Null(exception);
         await verificationStatusService.Received(1).CheckRunningOdds(match);
-        await verificationStatusService.Received(1).CheckTicketExclusion(Arg.Any<Match>());
+        await verificationStatusService.Received(1).IsExistMarkedTicket(Arg.Any<Match>());
     }
 }
