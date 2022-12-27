@@ -64,13 +64,19 @@ public class AutoRefundOtherSports : IHostedService
         });
     }
 
-    public Task StartAsync(CancellationToken cancellationToken)
+    public async Task StartAsync(CancellationToken cancellationToken)
     {
         running = true;
-        var autoRefundThread = new Thread(RefundThreadProcess);
         Console.WriteLine($"AutoRefund Other Sports Service Starting at {DateTime.Now}");
-        autoRefundThread.Start();
-        return Task.CompletedTask;
+        while (running)
+        {
+            var isMaintenance = await maintenanceService.IsMaintenance();
+            if (!isMaintenance)
+            {
+                await MainProcess();
+                await Task.Delay(int.Parse(configuration.GetSection("ServiceInterval").Value), cancellationToken);
+            }
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
@@ -80,29 +86,17 @@ public class AutoRefundOtherSports : IHostedService
         return Task.CompletedTask;
     }
 
-    private void RefundThreadProcess()
-    {
-        while (running)
-        {
-            if (!maintenanceService.IsMaintenance)
-            {
-                MainProcess();
-                Thread.Sleep(int.Parse(configuration.GetSection("ServiceInterval").Value));
-            }
-        }
-    }
-
-    private void MainProcess()
+    private async Task MainProcess()
     {
         try
         {
-            autoRefundController.ProcessAsync();
+            await autoRefundController.ProcessAsync();
             HandleMissedMatch();
             HandleGarbageCollector();
         }
         catch (Exception exception)
         {
-            LogService.Error("Exception in main thread - Process:", exception);
+            await LogService.ErrorAsync("Exception in main thread - Process:", exception);
         }
     }
 
@@ -161,7 +155,7 @@ public class AutoRefundOtherSports : IHostedService
 
         var sentryEngineOptions = new SentryEngineOptions
         {
-            Dsn = new Dsn(configuration.GetSection("Sentrytoken").Value)
+            Dsn = new Dsn(configuration.GetSection("SentryToken").Value)
         };
 
         logEngine.Add(new SentryLogging(sentryEngineOptions));

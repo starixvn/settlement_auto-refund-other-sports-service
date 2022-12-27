@@ -7,7 +7,7 @@ namespace AutoRefundOtherSports.Services;
 
 public interface IMaintenanceService
 {
-    bool IsMaintenance { get; }
+    Task<bool> IsMaintenance();
 }
 
 public class MaintenanceServiceImp : IMaintenanceService
@@ -23,28 +23,28 @@ public class MaintenanceServiceImp : IMaintenanceService
         this.appSettingsKey = appSettingsKey.Value;
     }
 
-    public bool IsMaintenance
+    public async Task<bool> IsMaintenance()
     {
-        get
-        {
-            var maintenanceService = new MaintenanceService(
-                UMClientManager.RestClient,
-                UMClientManager.CacheService,
-                UMClientManager.UMClientConfigs);
+        var maintenanceService = new MaintenanceService(
+            UMClientManager.RestClient,
+            UMClientManager.CacheService,
+            UMClientManager.UMClientConfigs);
 
-            var downTime = maintenanceService.GetUnderMaintenanceTime();
+        var downTime = await maintenanceService.GetUnderMaintenanceTimeAsync();
 
-            return downTime.IsUnderMaintenanceTime || IsDeploySPName;
-        }
+        var isDeploySpName = await IsDeploySpName();
+        return downTime.IsUnderMaintenanceTime || isDeploySpName;
     }
 
-    private bool IsDeploySPName
+    private async Task<bool> IsDeploySpName()
     {
-        get
+        var isExistedKey = await cache.ContainAsync(appSettingsKey.DeploymentSpName);
+        if (isExistedKey)
         {
-            cache.TryGet(appSettingsKey.DeploymentSpName, out int flagDeployment);
-
-            return flagDeployment > 0;
+            var (_, value) = await cache.TryGetAsync<int>(appSettingsKey.DeploymentSpName);
+            return value > 0;
         }
+
+        return false;
     }
 }
