@@ -1,19 +1,19 @@
 ﻿namespace AutoRefundOtherSports.Services;
 
-public interface IAutoRefundController
+public interface AutoRefundController
 {
     Task ProcessAsync();
 }
 
-public class AutoRefundControllerImp : IAutoRefundController
+public class AutoRefundControllerImp : AutoRefundController
 {
-    private readonly IMatchPoolService matchPoolService;
+    private readonly MatchPoolService matchPoolService;
 
-    private readonly IRefundController refundController;
+    private readonly RefundController refundController;
 
     public AutoRefundControllerImp(
-        IMatchPoolService matchPoolService,
-        IRefundController refundController
+        MatchPoolService matchPoolService,
+        RefundController refundController
     )
     {
         this.matchPoolService = matchPoolService;

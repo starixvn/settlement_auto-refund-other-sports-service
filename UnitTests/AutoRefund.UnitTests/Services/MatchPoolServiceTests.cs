@@ -2,13 +2,13 @@
 
 public class MatchPoolServiceTests
 {
-    private readonly IMatchPoolService service;
+    private readonly MatchPoolService service;
 
-    private readonly IMatchService matchService;
+    private readonly MatchService matchService;
 
     public MatchPoolServiceTests()
     {
-        matchService = Substitute.For<IMatchService>();
+        matchService = Substitute.For<MatchService>();
         service = new MatchPoolServiceImp(matchService);
     }
 

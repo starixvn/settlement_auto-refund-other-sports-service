@@ -1,8 +1,6 @@
-﻿using Fanex.Settlement.Converter.Services;
+﻿namespace AutoRefundOtherSports.Services;
 
-namespace AutoRefundOtherSports.Services;
-
-public interface ICreateQueryService
+public interface CreateQueryService
 {
     SettleCriteria QuerySettle(Match match);
 
@@ -13,7 +11,7 @@ public interface ICreateQueryService
     TicketCheckingCriteria CreateQueryCheckTicketRunning(Match match);
 }
 
-public class CreateQueryServiceImp : ICreateQueryService
+public class CreateQueryServiceImp : CreateQueryService
 {
     private readonly XmlConvertService xmlConvertService;
 

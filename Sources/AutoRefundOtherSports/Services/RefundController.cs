@@ -1,27 +1,25 @@
-﻿using AutoRefundOtherSports.Constants;
+﻿namespace AutoRefundOtherSports.Services;
 
-namespace AutoRefundOtherSports.Services;
-
-public interface IRefundController
+public interface RefundController
 {
     Task Process(Match match);
 }
 
-public class RefundControllerImp : IRefundController
+public class RefundControllerImp : RefundController
 {
-    private readonly IMatchService matchService;
+    private readonly MatchService matchService;
 
-    private readonly IVerificationService verificationService;
+    private readonly VerificationService verificationService;
 
-    private readonly IMatchPoolService matchPoolService;
+    private readonly MatchPoolService matchPoolService;
 
-    private readonly ILoggingService loggingService;
+    private readonly LoggingService loggingService;
 
     public RefundControllerImp(
-        IMatchService matchService,
-        IVerificationService verificationService,
-        IMatchPoolService matchPoolService,
-        ILoggingService loggingService)
+        MatchService matchService,
+        VerificationService verificationService,
+        MatchPoolService matchPoolService,
+        LoggingService loggingService)
     {
         this.matchService = matchService;
         this.verificationService = verificationService;

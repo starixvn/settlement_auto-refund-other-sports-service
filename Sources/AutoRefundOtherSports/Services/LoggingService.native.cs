@@ -1,8 +1,6 @@
-﻿using Fanex.Data.Repository;
+﻿namespace AutoRefundOtherSports.Services;
 
-namespace AutoRefundOtherSports.Services;
-
-public interface ILoggingService
+public interface LoggingService
 {
     Task WriteLog(Match match, string message);
 
@@ -11,13 +9,13 @@ public interface ILoggingService
     Task Update(Match match, string remark, int status);
 }
 
-public class LoggingServiceImp : ILoggingService
+public class LoggingServiceImp : LoggingService
 {
     private readonly IDynamicRepository repository;
 
-    private readonly ICreateQueryService createQueryService;
+    private readonly CreateQueryService createQueryService;
 
-    public LoggingServiceImp(IDynamicRepository repository, ICreateQueryService createQueryService)
+    public LoggingServiceImp(IDynamicRepository repository, CreateQueryService createQueryService)
     {
         this.repository = repository;
         this.createQueryService = createQueryService;

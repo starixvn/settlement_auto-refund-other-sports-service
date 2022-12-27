@@ -11,9 +11,9 @@ public class MatchServiceTests
 
     private readonly ICache cache;
 
-    private readonly IMatchService service;
+    private readonly MatchService service;
 
-    private readonly ILoggingService loggingService;
+    private readonly LoggingService loggingService;
 
     private readonly SettleService settleService;
 
@@ -22,7 +22,7 @@ public class MatchServiceTests
     public MatchServiceTests()
     {
         repository = Substitute.For<IDynamicRepository>();
-        loggingService = Substitute.For<ILoggingService>();
+        loggingService = Substitute.For<LoggingService>();
         settleService = Substitute.For<SettleService>();
         cache = new RedisCache(new RedisCacheOptions
         {

@@ -1,11 +1,6 @@
-﻿using AutoRefundOtherSports.Constants;
-using Fanex.Caching;
-using Fanex.Data.Repository;
-using Microsoft.Extensions.Options;
+﻿namespace AutoRefundOtherSports.Services;
 
-namespace AutoRefundOtherSports.Services;
-
-public interface IMatchService
+public interface MatchService
 {
     Task<List<Match>> GetMatches();
 
@@ -16,7 +11,7 @@ public interface IMatchService
     Task HandleAutoRefundException(Match match, AutoRefundException exception);
 }
 
-public class MatchServiceImp : IMatchService
+public class MatchServiceImp : MatchService
 {
     private readonly IDynamicRepository repository;
 
@@ -26,16 +21,14 @@ public class MatchServiceImp : IMatchService
 
     private readonly AppSettingsKey appSettingsKey;
 
-    private readonly ILoggingService loggingService;
+    private readonly LoggingService loggingService;
 
     private readonly SettleService settleService;
-
-    private const int DeploymentError = 99;
 
     public MatchServiceImp(IDynamicRepository repository,
         ICache cache,
         IOptions<AppSettingsKey> appSettingsKey,
-        ILoggingService loggingService,
+        LoggingService loggingService,
         SettleService settleService)
     {
         this.repository = repository;
@@ -91,7 +84,7 @@ public class MatchServiceImp : IMatchService
         {
             await SettleHedgeMatch(match);
         }
-        else if (result.ErrCode == DeploymentError)
+        else if (result.ErrCode == ErrorCode.DeploymentError)
         {
             await loggingService.Update(match, "", MatchStatus.Initial);
         }

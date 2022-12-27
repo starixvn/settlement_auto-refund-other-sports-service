@@ -1,18 +1,17 @@
 ﻿using ONEbook.UM;
-using ONEbook.UM.Services;
 
 namespace AutoRefundOtherSports.Services;
 
-public interface IMaintenanceService
+public interface MaintenanceService
 {
     bool IsMaintenance();
 }
 
-public class MaintenanceServiceImp : IMaintenanceService
+public class MaintenanceServiceImp : MaintenanceService
 {
     public bool IsMaintenance()
     {
-        var maintenanceService = new MaintenanceService(
+        var maintenanceService = new ONEbook.UM.Services.MaintenanceService(
             UMClientManager.RestClient,
             UMClientManager.CacheService,
             UMClientManager.UMClientConfigs);

@@ -19,21 +19,23 @@ public static class AutoRefundInjector
     public static void InitializeServices(this IServiceCollection service, IConfiguration configuration)
     {
         ConfigureAutoMapper(service);
+
         service.AddSingleton<IDynamicRepository, DynamicRepository>();
-        service.AddSingleton<IMatchPoolService, MatchPoolServiceImp>();
-        service.AddSingleton<ILoggingService, LoggingServiceImp>();
-        service.AddSingleton<IVerificationService, VerificationServiceImp>();
-        service.AddSingleton<IAutoRefundController, AutoRefundControllerImp>();
-        service.AddSingleton<ICreateQueryService, CreateQueryServiceImp>();
-        service.AddSingleton<IRefundController, RefundControllerImp>();
-        service.AddSingleton<IVerificationStatusService, VerificationStatusServiceImp>();
-        service.AddSingleton<IMatchService, MatchServiceImp>();
-        service.AddTransient<IMaintenanceService, MaintenanceServiceImp>();
+        service.AddSingleton<MatchPoolService, MatchPoolServiceImp>();
+        service.AddSingleton<LoggingService, LoggingServiceImp>();
+        service.AddSingleton<VerificationService, VerificationServiceImp>();
+        service.AddSingleton<AutoRefundController, AutoRefundControllerImp>();
+        service.AddSingleton<CreateQueryService, CreateQueryServiceImp>();
+        service.AddSingleton<RefundController, RefundControllerImp>();
+        service.AddSingleton<VerificationStatusService, VerificationStatusServiceImp>();
+        service.AddSingleton<MatchService, MatchServiceImp>();
+        service.AddTransient<MaintenanceService, MaintenanceServiceImp>();
         service.AddSingleton<XmlConvertService, XmlConvertServiceImp>();
         service.AddSingleton<SettleService, SettleServiceImp>();
         service.AddSingleton<ScaleOutSettleService, ScaleOutSettleServiceImp>();
         service.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         service.AddSingleton<GeneralService, GeneralServiceImp>();
+        service.AddSingleton<RetryValidationService, RetryValidationServiceImp>();
 
         service.AddSingleton(new UMClientConfiguration().Initialize(configuration));
         service.AddSingleton<IUMCacheService, UMCacheService>();

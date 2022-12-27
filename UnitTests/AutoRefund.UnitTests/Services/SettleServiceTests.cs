@@ -7,7 +7,7 @@ namespace AutoRefund.UnitTests.Services;
 
 public class SettleServiceTests
 {
-    private readonly ICreateQueryService createQueryService;
+    private readonly CreateQueryService createQueryService;
 
     private readonly IDynamicRepository repository;
 
@@ -17,7 +17,7 @@ public class SettleServiceTests
 
     public SettleServiceTests()
     {
-        createQueryService = Substitute.For<ICreateQueryService>();
+        createQueryService = Substitute.For<CreateQueryService>();
         repository = Substitute.For<IDynamicRepository>();
         scaleOutSettleService = Substitute.For<ScaleOutSettleService>();
         var appSetting = new AppSettingsKey

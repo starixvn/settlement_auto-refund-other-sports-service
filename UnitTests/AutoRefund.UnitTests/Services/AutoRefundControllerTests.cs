@@ -2,16 +2,16 @@
 
 public class AutoRefundControllerTests
 {
-    private readonly IMatchPoolService matchPoolService;
+    private readonly MatchPoolService matchPoolService;
 
-    private readonly IRefundController refundController;
+    private readonly RefundController refundController;
 
-    private readonly IAutoRefundController controller;
+    private readonly AutoRefundController controller;
 
     public AutoRefundControllerTests()
     {
-        matchPoolService = Substitute.For<IMatchPoolService>();
-        refundController = Substitute.For<IRefundController>();
+        matchPoolService = Substitute.For<MatchPoolService>();
+        refundController = Substitute.For<RefundController>();
         controller = new AutoRefundControllerImp(matchPoolService, refundController);
     }
 

@@ -5,16 +5,16 @@ namespace AutoRefund.UnitTests.Services;
 
 public class VerificationServiceTests
 {
-    private readonly IVerificationStatusService verificationStatusService;
+    private readonly VerificationStatusService verificationStatusService;
 
-    private readonly ILoggingService loggingService;
+    private readonly LoggingService loggingService;
 
-    private readonly IVerificationService service;
+    private readonly VerificationService service;
 
     public VerificationServiceTests()
     {
-        verificationStatusService = Substitute.For<IVerificationStatusService>();
-        loggingService = Substitute.For<ILoggingService>();
+        verificationStatusService = Substitute.For<VerificationStatusService>();
+        loggingService = Substitute.For<LoggingService>();
         var appSettings = new AppSettingsKey
         {
             RetryCount = 5,

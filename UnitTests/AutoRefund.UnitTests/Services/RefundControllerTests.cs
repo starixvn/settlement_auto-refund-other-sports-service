@@ -4,22 +4,22 @@ namespace AutoRefund.UnitTests.Services;
 
 public class RefundControllerTests
 {
-    private readonly IMatchService matchService;
+    private readonly MatchService matchService;
 
-    private readonly IVerificationService verificationService;
+    private readonly VerificationService verificationService;
 
-    private readonly IMatchPoolService matchPoolService;
+    private readonly MatchPoolService matchPoolService;
 
-    private readonly ILoggingService loggingService;
+    private readonly LoggingService loggingService;
 
-    private readonly IRefundController controller;
+    private readonly RefundController controller;
 
     public RefundControllerTests()
     {
-        matchPoolService = Substitute.For<IMatchPoolService>();
-        verificationService = Substitute.For<IVerificationService>();
-        matchService = Substitute.For<IMatchService>();
-        loggingService = Substitute.For<ILoggingService>();
+        matchPoolService = Substitute.For<MatchPoolService>();
+        verificationService = Substitute.For<VerificationService>();
+        matchService = Substitute.For<MatchService>();
+        loggingService = Substitute.For<LoggingService>();
 
         controller = new RefundControllerImp(matchService, verificationService, matchPoolService, loggingService);
     }

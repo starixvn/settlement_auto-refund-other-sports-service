@@ -6,14 +6,14 @@ namespace AutoRefund.UnitTests.Services
     {
         private readonly IDynamicRepository repository;
 
-        private readonly ICreateQueryService createQueryService;
+        private readonly CreateQueryService createQueryService;
 
-        private readonly ILoggingService service;
+        private readonly LoggingService service;
 
         public LoggingServiceTests()
         {
             repository = Substitute.For<IDynamicRepository>();
-            createQueryService = Substitute.For<ICreateQueryService>();
+            createQueryService = Substitute.For<CreateQueryService>();
             service = new LoggingServiceImp(repository, createQueryService);
         }
 

@@ -1,34 +1,25 @@
 ﻿using AutoRefundOtherSports.Exceptions;
-using Microsoft.Extensions.Options;
 
 namespace AutoRefundOtherSports.Services;
 
-public interface IVerificationService
+public interface VerificationService
 {
     void VerifyResultRunning(Match match);
 
     Task VerifyResultStatus(Match match);
 }
 
-public class VerificationServiceImp : IVerificationService
+public class VerificationServiceImp : VerificationService
 {
     private const byte SettlementStatusCalculated = 4;
 
     private const byte ResultStatusUnCalculate = 4;
 
-    private readonly IVerificationStatusService verificationStatusService;
+    private readonly RetryValidationService retryValidationService;
 
-    private readonly AppSettingsKey appSettingsKey;
-
-    private readonly ILoggingService loggingService;
-
-    public VerificationServiceImp(IVerificationStatusService verificationStatusService,
-        IOptions<AppSettingsKey> appSettingsKey,
-        ILoggingService loggingService)
+    public VerificationServiceImp(RetryValidationService retryValidationService)
     {
-        this.appSettingsKey = appSettingsKey.Value;
-        this.verificationStatusService = verificationStatusService;
-        this.loggingService = loggingService;
+        this.retryValidationService = retryValidationService;
     }
 
     public void VerifyResultRunning(Match match)
@@ -42,22 +33,10 @@ public class VerificationServiceImp : IVerificationService
 
     public async Task VerifyResultStatus(Match match)
     {
-        for (var i = 0; i < appSettingsKey.RetryCount + 1; i++)
+        var isChecking = await retryValidationService.IsCheckingOddsAndMarkedTicket(match);
+        if (!isChecking)
         {
-            var resultCheckingOdds = await verificationStatusService.CheckRunningOdds(match);
-            if (resultCheckingOdds.ErrCode == 0 && !(await verificationStatusService.IsExistMarkedTicket(match)))
-            {
-                return;
-            }
-
-            if (i < appSettingsKey.RetryCount)
-            {
-                await Task.Delay(appSettingsKey.RetryInterval);
-            }
-            else
-            {
-                throw new OddsAndMarkedTicketException();
-            }
+            throw new OddsAndMarkedTicketException();
         }
     }
 }

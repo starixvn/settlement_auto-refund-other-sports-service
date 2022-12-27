@@ -7,7 +7,7 @@ public class CreateQueryServiceTests
 {
     private readonly XmlConvertService xmlConvertService;
 
-    private readonly ICreateQueryService service;
+    private readonly CreateQueryService service;
 
     private readonly Match match;
 

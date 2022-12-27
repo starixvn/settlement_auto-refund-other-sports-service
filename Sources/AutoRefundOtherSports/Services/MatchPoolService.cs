@@ -1,19 +1,19 @@
 ﻿namespace AutoRefundOtherSports.Services;
 
-public interface IMatchPoolService
+public interface MatchPoolService
 {
     Task<List<Match>> PeekNewMatch();
 
     void RemoveMatch(Match match);
 }
 
-public class MatchPoolServiceImp : IMatchPoolService
+public class MatchPoolServiceImp : MatchPoolService
 {
-    private readonly IMatchService matchService;
+    private readonly MatchService matchService;
 
     private readonly object lockObject;
 
-    public MatchPoolServiceImp(IMatchService matchService)
+    public MatchPoolServiceImp(MatchService matchService)
     {
         this.matchService = matchService;
         PoolOfMatches = new List<Match>();

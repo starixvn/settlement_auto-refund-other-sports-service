@@ -14,13 +14,13 @@ namespace Fanex.AutoRefundOtherSports.Service;
 
 public class AutoRefundOtherSports : IHostedService
 {
-    private readonly IMaintenanceService maintenanceService;
+    private readonly MaintenanceService maintenanceService;
 
-    private readonly IAutoRefundController autoRefundController;
+    private readonly AutoRefundController autoRefundController;
 
     private readonly IConfiguration configuration;
 
-    private readonly IMatchService matchService;
+    private readonly MatchService matchService;
 
     private bool running;
 
@@ -29,10 +29,10 @@ public class AutoRefundOtherSports : IHostedService
     private int timeCounter;
 
     public AutoRefundOtherSports(
-        IAutoRefundController autoRefundController,
+        AutoRefundController autoRefundController,
         IConfiguration configuration,
-        IMaintenanceService maintenanceService,
-        IMatchService matchService)
+        MaintenanceService maintenanceService,
+        MatchService matchService)
     {
         this.autoRefundController = autoRefundController;
         this.maintenanceService = maintenanceService;

@@ -4,15 +4,15 @@ namespace AutoRefund.UnitTests.Services;
 
 public class VerificationStatusServiceTests
 {
-    private readonly ICreateQueryService createQueryService;
+    private readonly CreateQueryService createQueryService;
 
     private readonly IDynamicRepository repository;
 
-    private readonly IVerificationStatusService service;
+    private readonly VerificationStatusService service;
 
     public VerificationStatusServiceTests()
     {
-        createQueryService = Substitute.For<ICreateQueryService>();
+        createQueryService = Substitute.For<CreateQueryService>();
         repository = Substitute.For<IDynamicRepository>();
         var appSettingsOptions = Options.Create(new AppSettingsKey { SiteDbServer = new List<string> { "01", "02" } });
         service = new VerificationStatusServiceImp(createQueryService, repository, appSettingsOptions);

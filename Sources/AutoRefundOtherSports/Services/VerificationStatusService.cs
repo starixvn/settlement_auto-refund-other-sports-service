@@ -1,25 +1,22 @@
-﻿using Fanex.Data.Repository;
-using Microsoft.Extensions.Options;
+﻿namespace AutoRefundOtherSports.Services;
 
-namespace AutoRefundOtherSports.Services;
-
-public interface IVerificationStatusService
+public interface VerificationStatusService
 {
     Task<CheckOddsCriteria> CheckRunningOdds(Match match);
 
-    Task<Boolean> IsExistMarkedTicket(Match match);
+    Task<bool> IsExistMarkedTicket(Match match);
 }
 
-public class VerificationStatusServiceImp : IVerificationStatusService
+public class VerificationStatusServiceImp : VerificationStatusService
 {
-    private readonly ICreateQueryService createQueryService;
+    private readonly CreateQueryService createQueryService;
 
     private readonly IDynamicRepository repository;
 
     private readonly AppSettingsKey appSettingsKey;
 
     public VerificationStatusServiceImp(
-        ICreateQueryService createQueryService,
+        CreateQueryService createQueryService,
         IDynamicRepository repository,
         IOptions<AppSettingsKey> appSettingsKey)
     {
@@ -37,7 +34,7 @@ public class VerificationStatusServiceImp : IVerificationStatusService
         return criteria;
     }
 
-    public async Task<Boolean> IsExistMarkedTicket(Match match)
+    public async Task<bool> IsExistMarkedTicket(Match match)
     {
         var criteria = new CheckMarkedTicketsCriteria
         {

@@ -1,7 +1,5 @@
-﻿using Fanex.Data.Repository;
-using Fanex.Settlement.ScaleOut.Request;
+﻿using Fanex.Settlement.ScaleOut.Request;
 using Fanex.Settlement.ScaleOut.Services;
-using Microsoft.Extensions.Options;
 
 namespace AutoRefundOtherSports.Services;
 
@@ -12,7 +10,7 @@ public interface SettleService
 
 public class SettleServiceImp : SettleService
 {
-    private readonly ICreateQueryService createQueryService;
+    private readonly CreateQueryService createQueryService;
 
     private readonly IDynamicRepository repository;
 
@@ -20,7 +18,7 @@ public class SettleServiceImp : SettleService
 
     private readonly AppSettingsKey appSettingsKey;
 
-    public SettleServiceImp(ICreateQueryService createQueryService,
+    public SettleServiceImp(CreateQueryService createQueryService,
         IDynamicRepository repository,
         ScaleOutSettleService scaleOutSettleService,
         IOptions<AppSettingsKey> appSettingsKey)
@@ -45,7 +43,6 @@ public class SettleServiceImp : SettleService
 
     private async Task<Result> ValidateBeforeExecute(SettleCriteria criteria)
     {
-        const string errorCodeMatchInQueue = "1001003";
         var request = new EventTicketRequest
         {
             MatchId = criteria.MatchId,
@@ -58,7 +55,7 @@ public class SettleServiceImp : SettleService
         for (var i = 0; i < appSettingsKey.RetryValidateCount; i++)
         {
             var resultMessage = await scaleOutSettleService.ValidateEventAndTicket(request);
-            if (resultMessage.ErrorCode.ToString() == errorCodeMatchInQueue && i < appSettingsKey.RetryValidateCount - 1)
+            if (resultMessage.ErrorCode == ErrorCode.MatchInQueue && i < appSettingsKey.RetryValidateCount - 1)
             {
                 await Task.Delay(appSettingsKey.RetryValidate);
                 continue;
