@@ -5,7 +5,7 @@ namespace AutoRefundOtherSports.Services;
 
 public interface SettleService
 {
-    Task<Result> SettleMatch(Match match);
+    Task SettleMatch(Match match);
 }
 
 public class SettleServiceImp : SettleService
@@ -16,29 +16,48 @@ public class SettleServiceImp : SettleService
 
     private readonly ScaleOutSettleService scaleOutSettleService;
 
+    private readonly RetryValidationService retryValidationService;
+
+    private readonly LoggingService loggingService;
+
     private readonly AppSettingsKey appSettingsKey;
 
     public SettleServiceImp(CreateQueryService createQueryService,
         IDynamicRepository repository,
         ScaleOutSettleService scaleOutSettleService,
+        RetryValidationService retryValidationService,
+        LoggingService loggingService,
         IOptions<AppSettingsKey> appSettingsKey)
     {
         this.createQueryService = createQueryService;
         this.repository = repository;
         this.scaleOutSettleService = scaleOutSettleService;
+        this.retryValidationService = retryValidationService;
+        this.loggingService = loggingService;
         this.appSettingsKey = appSettingsKey.Value;
     }
 
-    public async Task<Result> SettleMatch(Match match)
+    public async Task SettleMatch(Match match)
     {
         var criteria = createQueryService.QuerySettle(match);
         var validateTicket = await ValidateBeforeExecute(criteria);
-        if (validateTicket.ErrCode == 0)
+        await HandleValidatedMatch(validateTicket, match, criteria);
+    }
+
+    private async Task HandleValidatedMatch(Result result, Match match, SettleCriteria criteria)
+    {
+        if (result.ErrCode == 0)
         {
+            await loggingService.Update(match, "", MatchStatus.Running);
             await UpdateMatchInfo(criteria);
             await ExecuteAsync(criteria);
+            await SettleHedgeMatch(match, criteria);
         }
-        return validateTicket;
+        else if (result.ErrCode != ErrorCode.DeploymentError)
+        {
+            await loggingService.WriteLog(match, result.ErrMsg);
+            await loggingService.Update(match, result.ErrMsg, MatchStatus.Failed);
+        }
     }
 
     private async Task<Result> ValidateBeforeExecute(SettleCriteria criteria)
@@ -52,22 +71,7 @@ public class SettleServiceImp : SettleService
             SelectedResources = criteria.SelectedResources,
             IsAuto = true
         };
-        for (var i = 0; i < appSettingsKey.RetryValidateCount; i++)
-        {
-            var resultMessage = await scaleOutSettleService.ValidateEventAndTicket(request);
-            if (resultMessage.ErrorCode == ErrorCode.MatchInQueue && i < appSettingsKey.RetryValidateCount - 1)
-            {
-                await Task.Delay(appSettingsKey.RetryValidate);
-                continue;
-            }
-            return new Result
-            {
-                ErrCode = resultMessage.ErrorCode,
-                ErrMsg = resultMessage.ErrorMessage
-            };
-        }
-
-        return new Result();
+        return await retryValidationService.ValidateEventTicket(request);
     }
 
     private async Task UpdateMatchInfo(SettleCriteria criteria)
@@ -91,5 +95,22 @@ public class SettleServiceImp : SettleService
             criteria.DbServer = server;
             await repository.ExecuteAsync(criteria);
         }
+    }
+
+    private async Task SettleHedgeMatch(Match match, SettleCriteria criteria)
+    {
+        var hedgeMatch = await GetHedgeMatch(match.MatchId);
+        if (hedgeMatch != null)
+        {
+            criteria.MatchId = hedgeMatch.MatchId;
+            await UpdateMatchInfo(criteria);
+            await ExecuteAsync(criteria);
+        }
+    }
+
+    private async Task<HedgeMatchDetail> GetHedgeMatch(int matchId)
+    {
+        var criteria = new GetHedgeMatchCriteria { MatchId = matchId };
+        return await repository.GetAsync<HedgeMatchDetail>(criteria);
     }
 }

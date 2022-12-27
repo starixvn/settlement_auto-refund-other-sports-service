@@ -4,8 +4,6 @@ public interface MatchService
 {
     Task<List<Match>> GetMatches();
 
-    Task Push(Match match);
-
     Task CheckMissedMatch();
 
     Task HandleAutoRefundException(Match match, AutoRefundException exception);
@@ -23,19 +21,15 @@ public class MatchServiceImp : MatchService
 
     private readonly LoggingService loggingService;
 
-    private readonly SettleService settleService;
-
     public MatchServiceImp(IDynamicRepository repository,
         ICache cache,
         IOptions<AppSettingsKey> appSettingsKey,
-        LoggingService loggingService,
-        SettleService settleService)
+        LoggingService loggingService)
     {
         this.repository = repository;
         this.cache = cache;
         this.appSettingsKey = appSettingsKey.Value;
         this.loggingService = loggingService;
-        this.settleService = settleService;
     }
 
     public async Task<List<Match>> GetMatches()
@@ -72,29 +66,6 @@ public class MatchServiceImp : MatchService
         return matches;
     }
 
-    public async Task Push(Match match)
-    {
-        var result = await settleService.SettleMatch(match);
-        await SettleHedgeMatchOrWriteLog(match, result);
-    }
-
-    private async Task SettleHedgeMatchOrWriteLog(Match match, Result result)
-    {
-        if (result.IsSuccessful)
-        {
-            await SettleHedgeMatch(match);
-        }
-        else if (result.ErrCode == ErrorCode.DeploymentError)
-        {
-            await loggingService.Update(match, "", MatchStatus.Initial);
-        }
-        else
-        {
-            await loggingService.WriteLog(match, result.ErrMsg);
-            await loggingService.Update(match, result.ErrMsg, MatchStatus.Failed);
-        }
-    }
-
     public async Task CheckMissedMatch()
     {
         var criteria = new UpdateResultStatusCriteria
@@ -108,25 +79,5 @@ public class MatchServiceImp : MatchService
     {
         await loggingService.WriteLog(match, exception);
         await loggingService.Update(match, exception.Description, MatchStatus.Failed);
-    }
-
-    private async Task SettleHedgeMatch(Match match)
-    {
-        var hedgeMatch = await GetHedgeMatch(match.MatchId);
-        if (hedgeMatch != null)
-        {
-            match.MatchId = hedgeMatch.MatchId;
-            var result = await settleService.SettleMatch(match);
-            if (!result.IsSuccessful)
-            {
-                await loggingService.WriteLog(match, result.ErrMsg);
-            }
-        }
-    }
-
-    private async Task<HedgeMatchDetail> GetHedgeMatch(int matchId)
-    {
-        var criteria = new GetHedgeMatchCriteria { MatchId = matchId };
-        return await repository.GetAsync<HedgeMatchDetail>(criteria);
     }
 }

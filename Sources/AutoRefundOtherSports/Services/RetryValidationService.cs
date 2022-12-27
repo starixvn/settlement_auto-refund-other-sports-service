@@ -1,8 +1,13 @@
-﻿namespace AutoRefundOtherSports.Services;
+﻿using Fanex.Settlement.ScaleOut.Request;
+using Fanex.Settlement.ScaleOut.Services;
+
+namespace AutoRefundOtherSports.Services;
 
 public interface RetryValidationService
 {
     Task<bool> IsCheckingOddsAndMarkedTicket(Match match);
+
+    Task<Result> ValidateEventTicket(EventTicketRequest request);
 }
 
 public class RetryValidationServiceImp : RetryValidationService
@@ -11,12 +16,16 @@ public class RetryValidationServiceImp : RetryValidationService
 
     private readonly VerificationStatusService verificationStatusService;
 
+    private readonly ScaleOutSettleService scaleOutSettleService;
+
     public RetryValidationServiceImp(
         VerificationStatusService verificationStatusService,
-        IOptions<AppSettingsKey> appSettingsKey)
+        IOptions<AppSettingsKey> appSettingsKey,
+        ScaleOutSettleService scaleOutSettleService)
     {
         this.appSettingsKey = appSettingsKey.Value;
         this.verificationStatusService = verificationStatusService;
+        this.scaleOutSettleService = scaleOutSettleService;
     }
 
     public async Task<bool> IsCheckingOddsAndMarkedTicket(Match match)
@@ -37,5 +46,25 @@ public class RetryValidationServiceImp : RetryValidationService
         }
 
         return false;
+    }
+
+    public async Task<Result> ValidateEventTicket(EventTicketRequest request)
+    {
+        for (var i = 0; i < appSettingsKey.RetryValidateCount; i++)
+        {
+            var resultMessage = await scaleOutSettleService.ValidateEventAndTicket(request);
+            if (resultMessage.ErrorCode == ErrorCode.MatchInQueue && i < appSettingsKey.RetryValidateCount - 1)
+            {
+                await Task.Delay(appSettingsKey.RetryValidate);
+                continue;
+            }
+            return new Result
+            {
+                ErrCode = resultMessage.ErrorCode,
+                ErrMsg = resultMessage.ErrorMessage
+            };
+        }
+
+        return new Result();
     }
 }

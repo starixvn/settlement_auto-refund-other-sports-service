@@ -1,4 +1,5 @@
 ﻿namespace AutoRefundOtherSports.Models;
+
 public class Match
 {
     public int MatchId { get; set; }
@@ -7,7 +8,7 @@ public class Match
 
     public int TypeId { get; set; }
 
-        public int SportType { get; set; }
+    public int SportType { get; set; }
 
     public List<ResultDetail> ResultDetails { get; set; }
 

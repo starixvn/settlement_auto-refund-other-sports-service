@@ -15,26 +15,29 @@ public class RefundControllerImp : RefundController
 
     private readonly LoggingService loggingService;
 
+    private readonly SettleService settleService;
+
     public RefundControllerImp(
         MatchService matchService,
         VerificationService verificationService,
         MatchPoolService matchPoolService,
-        LoggingService loggingService)
+        LoggingService loggingService,
+        SettleService settleService)
     {
         this.matchService = matchService;
         this.verificationService = verificationService;
         this.matchPoolService = matchPoolService;
         this.loggingService = loggingService;
+        this.settleService = settleService;
     }
 
     public async Task Process(Match match)
     {
-        await loggingService.Update(match, "", MatchStatus.Running);
         try
         {
             verificationService.VerifyResultRunning(match);
             await verificationService.VerifyResultStatus(match);
-            await matchService.Push(match);
+            await settleService.SettleMatch(match);
         }
         catch (AutoRefundException exception)
         {
