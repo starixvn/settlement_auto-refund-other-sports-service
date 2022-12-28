@@ -43,7 +43,29 @@ public class VerificationStatusServiceTests
                 }
         };
         await repository.ExecuteAsync(Arg.Do<CheckMarkedTicketsCriteria>(item => item.IsExistMarkedTicket = true));
+
         var result = await service.IsExistMarkedTicket(match);
+
+        await repository.Received().ExecuteAsync(Arg.Any<CheckMarkedTicketsCriteria>());
         Assert.True(result);
+    }
+
+    [Fact]
+    public async Task CheckTicketExclusion_NotExistMarkedTicket_ExecuteAllDB()
+    {
+        var match = new Match
+        {
+            MatchId = 1,
+            ResultDetails = new List<ResultDetail>
+            {
+                new ()
+            }
+        };
+        await repository.ExecuteAsync(Arg.Do<CheckMarkedTicketsCriteria>(item => item.IsExistMarkedTicket = false));
+
+        var result = await service.IsExistMarkedTicket(match);
+
+        await repository.Received(2).ExecuteAsync(Arg.Any<CheckMarkedTicketsCriteria>());
+        Assert.False(result);
     }
 }

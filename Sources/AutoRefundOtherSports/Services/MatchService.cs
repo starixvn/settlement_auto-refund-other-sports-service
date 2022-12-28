@@ -40,7 +40,7 @@ public class MatchServiceImp : MatchService
         var matches = GroupMatch(resultDetails);
         matches.AddRange(matchVolleyball);
 
-        cache.TryGet(KeyLeagueId, out int leagueId);
+        var (_, leagueId) = await cache.TryGetAsync<int>(KeyLeagueId);
 
         return appSettingsKey.EnvironmentName switch
         {

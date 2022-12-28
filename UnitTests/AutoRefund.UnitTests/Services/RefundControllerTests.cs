@@ -12,6 +12,8 @@ public class RefundControllerTests
 
     private readonly LoggingService loggingService;
 
+    private readonly SettleService settleService;
+
     private readonly RefundController controller;
 
     public RefundControllerTests()
@@ -20,8 +22,9 @@ public class RefundControllerTests
         verificationService = Substitute.For<VerificationService>();
         matchService = Substitute.For<MatchService>();
         loggingService = Substitute.For<LoggingService>();
+        settleService = Substitute.For<SettleService>();
 
-        controller = new RefundControllerImp(matchService, verificationService, matchPoolService, loggingService);
+        controller = new RefundControllerImp(matchService, verificationService, matchPoolService, loggingService, settleService);
     }
 
     [Fact]
@@ -31,7 +34,7 @@ public class RefundControllerTests
 
         await controller.Process(match);
 
-        await matchService.Received().Push(match);
+        await settleService.Received().SettleMatch(match);
         await matchService.DidNotReceive().HandleAutoRefundException(Arg.Any<Match>(), Arg.Any<AutoRefundException>());
         matchPoolService.Received().RemoveMatch(match);
     }
@@ -44,7 +47,7 @@ public class RefundControllerTests
 
         await controller.Process(match);
 
-        await matchService.DidNotReceive().Push(match);
+        await settleService.DidNotReceive().SettleMatch(match);
         await matchService.Received().HandleAutoRefundException(Arg.Any<Match>(), Arg.Any<AutoRefundException>());
         matchPoolService.Received().RemoveMatch(match);
     }

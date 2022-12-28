@@ -107,6 +107,7 @@ public class SettleServiceImp : SettleService
         if (hedgeMatch != null)
         {
             criteria.MatchId = hedgeMatch.MatchId;
+            criteria.BroadcastSessionId = Guid.NewGuid().ToString();
             await UpdateMatchInfo(criteria);
             await ExecuteAsync(criteria);
         }

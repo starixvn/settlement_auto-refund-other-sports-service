@@ -28,7 +28,8 @@ public class CreateQueryServiceImp : CreateQueryService
         var criteria = new SettleCriteria
         {
             MatchId = match.MatchId,
-            SelectedResources = resourcesResult
+            SelectedResources = resourcesResult,
+            BroadcastSessionId = Guid.NewGuid().ToString()
         };
 
         return criteria;

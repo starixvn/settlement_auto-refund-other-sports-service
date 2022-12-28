@@ -1,5 +1,4 @@
 ﻿using Fanex.Data;
-using Fanex.Data.Repository;
 
 namespace AutoRefundOtherSports.Criteria;
 
@@ -14,6 +13,8 @@ public class SettleCriteria : NonQueryCommand
     public string Action { get; } = "REFUND";
 
     public bool IsAuto { get; } = true;
+
+    public string BroadcastSessionId { get; set; }
 
     public int ErrCode { get; set; }
 

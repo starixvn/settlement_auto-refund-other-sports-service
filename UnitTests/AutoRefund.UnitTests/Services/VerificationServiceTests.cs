@@ -5,23 +5,20 @@ namespace AutoRefund.UnitTests.Services;
 
 public class VerificationServiceTests
 {
-    private readonly VerificationStatusService verificationStatusService;
-
-    private readonly LoggingService loggingService;
+    private readonly RetryValidationService retryValidationService;
 
     private readonly VerificationService service;
 
     public VerificationServiceTests()
     {
-        verificationStatusService = Substitute.For<VerificationStatusService>();
-        loggingService = Substitute.For<LoggingService>();
+        retryValidationService = Substitute.For<RetryValidationService>();
         var appSettings = new AppSettingsKey
         {
             RetryCount = 5,
             RetryInterval = 300
         };
         var options = Options.Create(appSettings);
-        service = new VerificationServiceImp(verificationStatusService, options, loggingService);
+        service = new VerificationServiceImp(retryValidationService);
     }
 
     [Fact]
@@ -66,38 +63,21 @@ public class VerificationServiceTests
     }
 
     [Fact]
-    public async Task VerifyResultStatus_ExistRunningOdds_ThrowExceptionAfterRetry()
+    public async Task VerifyResultStatus_ValidationFailure_ThrowExceptionAfterRetry()
     {
         var match = new Match();
-        verificationStatusService.CheckRunningOdds(match).Returns(new CheckOddsCriteria { ErrCode = 1 });
+        retryValidationService.IsCheckingOddsAndMarkedTicket(match).Returns(false);
 
         await Assert.ThrowsAsync<OddsAndMarkedTicketException>(() => service.VerifyResultStatus(match));
-        await verificationStatusService.Received(6).CheckRunningOdds(match);
-        await verificationStatusService.DidNotReceive().IsExistMarkedTicket(Arg.Any<Match>());
     }
 
     [Fact]
-    public async Task VerifyResultStatus_ExistMarkedTicket_ThrowExceptionAfterRetry()
+    public async Task VerifyResultStatus_ValidationPassed_DoNotThrowAnyThing()
     {
         var match = new Match();
-        verificationStatusService.CheckRunningOdds(match).Returns(new CheckOddsCriteria());
-        verificationStatusService.IsExistMarkedTicket(match).Returns(true);
-
-        await Assert.ThrowsAsync<OddsAndMarkedTicketException>(() => service.VerifyResultStatus(match));
-        await verificationStatusService.Received(6).CheckRunningOdds(match);
-        await verificationStatusService.Received(6).IsExistMarkedTicket(Arg.Any<Match>());
-    }
-
-    [Fact]
-    public async Task VerifyResultStatus_ResultValid_NotThrowExceptionAndNotRetry()
-    {
-        var match = new Match();
-        verificationStatusService.CheckRunningOdds(match).Returns(new CheckOddsCriteria());
-        verificationStatusService.IsExistMarkedTicket(match).Returns(false);
+        retryValidationService.IsCheckingOddsAndMarkedTicket(match).Returns(true);
 
         var exception = await Record.ExceptionAsync(() => service.VerifyResultStatus(match));
         Assert.Null(exception);
-        await verificationStatusService.Received(1).CheckRunningOdds(match);
-        await verificationStatusService.Received(1).IsExistMarkedTicket(Arg.Any<Match>());
     }
 }

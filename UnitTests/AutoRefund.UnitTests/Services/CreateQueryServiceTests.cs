@@ -39,7 +39,8 @@ public class CreateQueryServiceTests
 
         var result = service.QuerySettle(match);
 
-        Assert.Equal(JsonConvert.SerializeObject(result), JsonConvert.SerializeObject(criteria));
+        Assert.Equal(result.SelectedResources, criteria.SelectedResources);
+        Assert.Equal(result.MatchId, criteria.MatchId);
     }
 
     [Fact]

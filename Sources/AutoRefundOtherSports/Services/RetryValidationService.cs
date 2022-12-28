@@ -30,16 +30,15 @@ public class RetryValidationServiceImp : RetryValidationService
 
     public async Task<bool> IsCheckingOddsAndMarkedTicket(Match match)
     {
-        for (var i = 0; i < appSettingsKey.RetryCount; i++)
+        for (var i = 0; i <= appSettingsKey.RetryCount; i++)
         {
             var resultCheckingOdds = await verificationStatusService.CheckRunningOdds(match);
-            var isExistMarkedTicket = await verificationStatusService.IsExistMarkedTicket(match);
-            if (resultCheckingOdds.ErrCode == 0 && !isExistMarkedTicket)
+            if (resultCheckingOdds.ErrCode == 0 && !await verificationStatusService.IsExistMarkedTicket(match))
             {
                 return true;
             }
 
-            if (i < appSettingsKey.RetryCount - 1)
+            if (i < appSettingsKey.RetryCount)
             {
                 await Task.Delay(appSettingsKey.RetryInterval);
             }
@@ -50,10 +49,10 @@ public class RetryValidationServiceImp : RetryValidationService
 
     public async Task<Result> ValidateEventTicket(EventTicketRequest request)
     {
-        for (var i = 0; i < appSettingsKey.RetryValidateCount; i++)
+        for (var i = 0; i <= appSettingsKey.RetryValidateCount; i++)
         {
             var resultMessage = await scaleOutSettleService.ValidateEventAndTicket(request);
-            if (resultMessage.ErrorCode == ErrorCode.MatchInQueue && i < appSettingsKey.RetryValidateCount - 1)
+            if (resultMessage.ErrorCode == ErrorCode.MatchInQueue && i < appSettingsKey.RetryValidateCount)
             {
                 await Task.Delay(appSettingsKey.RetryValidate);
                 continue;
