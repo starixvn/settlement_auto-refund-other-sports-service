@@ -40,20 +40,24 @@ public class SettleServiceImp : SettleService
     public async Task SettleMatch(Match match)
     {
         var criteria = createQueryService.QuerySettle(match);
-        var validateTicket = await ValidateBeforeExecute(criteria);
-        await HandleValidatedMatch(validateTicket, match, criteria);
+        var result = await ValidateBeforeExecute(criteria);
+
+        if (result.ErrCode != ErrorCode.DeploymentError)
+        {
+            await ProcessSettleMatch(result, match, criteria);
+        }
     }
 
-    private async Task HandleValidatedMatch(Result result, Match match, SettleCriteria criteria)
+    private async Task ProcessSettleMatch(Result result, Match match, SettleCriteria criteria)
     {
         if (result.ErrCode == 0)
         {
-            await loggingService.Update(match, "", MatchStatus.Running);
+            await loggingService.Update(match, string.Empty, MatchStatus.Running);
             await UpdateMatchInfo(criteria);
             await ExecuteAsync(criteria);
             await SettleHedgeMatch(match, criteria);
         }
-        else if (result.ErrCode != ErrorCode.DeploymentError)
+        else
         {
             await loggingService.WriteLog(match, result.ErrMsg);
             await loggingService.Update(match, result.ErrMsg, MatchStatus.Failed);
