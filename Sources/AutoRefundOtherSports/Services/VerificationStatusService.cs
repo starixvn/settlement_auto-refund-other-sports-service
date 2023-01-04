@@ -1,63 +1,57 @@
-﻿using AutoRefundOtherSports.Criteria;
-using AutoRefundOtherSports.Models;
-using Fanex.Data.Repository;
-using System.Linq;
-using System.Threading.Tasks;
+﻿namespace AutoRefundOtherSports.Services;
 
-namespace AutoRefundOtherSports.Services
+public interface VerificationStatusService
 {
-    public interface IVerificationStatusService
+    Task<CheckOddsCriteria> CheckRunningOdds(Match match);
+
+    Task<bool> IsExistMarkedTicket(Match match);
+}
+
+public class VerificationStatusServiceImp : VerificationStatusService
+{
+    private readonly CreateQueryService createQueryService;
+
+    private readonly IDynamicRepository repository;
+
+    private readonly AppSettingsKey appSettingsKey;
+
+    public VerificationStatusServiceImp(
+        CreateQueryService createQueryService,
+        IDynamicRepository repository,
+        IOptions<AppSettingsKey> appSettingsKey)
     {
-        Task<CheckOddsCriteria> CheckRunningOdds(Match match);
-
-        Task<CheckMarkedTicketsCriteria> CheckTicketExclusion(Match match);
-
-        Task<TicketCheckingCriteria> CheckTicketSettled(Match match);
+        this.createQueryService = createQueryService;
+        this.repository = repository;
+        this.appSettingsKey = appSettingsKey.Value;
     }
 
-    public class VerificationStatusServiceImp : IVerificationStatusService
+    public async Task<CheckOddsCriteria> CheckRunningOdds(Match match)
     {
-        private readonly ICreateQueryService createQueryService;
+        var criteria = createQueryService.CreateQueryCheckOdds(match);
 
-        private readonly IDynamicRepository repository;
+        await repository.ExecuteAsync(criteria);
 
-        public VerificationStatusServiceImp(
-            ICreateQueryService createQueryService,
-            IDynamicRepository repository)
+        return criteria;
+    }
+
+    public async Task<bool> IsExistMarkedTicket(Match match)
+    {
+        var criteria = new CheckMarkedTicketsCriteria
         {
-            this.createQueryService = createQueryService;
-            this.repository = repository;
-        }
+            MatchId = match.MatchId,
+            ResourceIds = string.Join(",", match.ResultDetails.Select(item => item.ResourceId).ToList())
+        };
 
-        public async Task<CheckOddsCriteria> CheckRunningOdds(Match match)
+        foreach (var server in appSettingsKey.SiteDbServer)
         {
-            var criteria = createQueryService.CreateQueryCheckOdds(match);
-
+            criteria.DbServer = server;
             await repository.ExecuteAsync(criteria);
-
-            return criteria;
-        }
-
-        public async Task<CheckMarkedTicketsCriteria> CheckTicketExclusion(Match match)
-        {
-            var criteria = new CheckMarkedTicketsCriteria
+            if (criteria.IsExistMarkedTicket)
             {
-                MatchId = match.MatchId,
-                ResourceIds = string.Join(",", match.ResultDetails.Select(item => item.ResourceId).ToList())
-            };
-
-            await repository.ExecuteAsync(criteria);
-
-            return criteria;
+                return criteria.IsExistMarkedTicket;
+            }
         }
 
-        public async Task<TicketCheckingCriteria> CheckTicketSettled(Match match)
-        {
-            var criteria = createQueryService.CreateQueryCheckTicketRunning(match);
-
-            await repository.ExecuteAsync(criteria);
-
-            return criteria;
-        }
+        return false;
     }
 }

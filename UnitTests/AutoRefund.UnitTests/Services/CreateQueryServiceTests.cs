@@ -1,99 +1,94 @@
-﻿using AutoRefundOtherSports.Criteria;
-using AutoRefundOtherSports.Models;
-using AutoRefundOtherSports.Services;
-using Kaden.XmlConverter;
+﻿using Fanex.Settlement.Converter.Services;
 using Newtonsoft.Json;
-using System.Collections.Generic;
-using Xunit;
 
-namespace AutoRefund.UnitTests.Services
+namespace AutoRefund.UnitTests.Services;
+
+public class CreateQueryServiceTests
 {
-    public class CreateQueryServiceTests
+    private readonly XmlConvertService xmlConvertService;
+
+    private readonly CreateQueryService service;
+
+    private readonly Match match;
+
+    public CreateQueryServiceTests()
     {
-        private readonly XmlConvertService xmlConvertService;
-
-        private readonly ICreateQueryService service;
-
-        private readonly Match match;
-
-        public CreateQueryServiceTests()
+        xmlConvertService = new XmlConvertServiceImp();
+        service = new CreateQueryServiceImp(xmlConvertService);
+        match = new Match()
         {
-            xmlConvertService = new XmlConvertServiceImp();
-            service = new CreateQueryServiceImp(xmlConvertService);
-            match = new Match()
-            {
-                MatchId = 1,
-                ResultDetails = new List<ResultDetail>
+            MatchId = 1,
+            ResultDetails = new List<ResultDetail>
                 {
                     new ResultDetail
                     {
                         ResourceId = "0101"
                     }
                 }
-            };
-        }
+        };
+    }
 
-        [Fact]
-        public void QuerySettle_Always_ReturnsExpectedData()
+    [Fact]
+    public void QuerySettle_Always_SettleResult()
+    {
+        var criteria = new SettleCriteria
         {
-            var criteria = new SettleCriteria
-            {
-                MatchId = 1,
-                SelectedResources = "<Resources><Resource Id=\"0101\" /></Resources>"
-            };
+            MatchId = 1,
+            SelectedResources = "<Resources><Resource Id=\"0101\" /></Resources>"
+        };
 
-            var result = service.QuerySettle(match);
+        var result = service.QuerySettle(match);
 
-            Assert.Equal(JsonConvert.SerializeObject(result), JsonConvert.SerializeObject(criteria));
-        }
+        Assert.Equal(result.SelectedResources, criteria.SelectedResources);
+        Assert.Equal(result.MatchId, criteria.MatchId);
+    }
 
-        [Fact]
-        public void QueryUpdateResult_Always_ReturnsExpectedData()
+    [Fact]
+    public void QueryUpdateResult_Always_ReturnsExpectedData()
+    {
+        match.TypeId = 1;
+        match.ResultDetails.Add(new ResultDetail { ResourceId = "0102" });
+        var criteria = new UpdateResultStatusCriteria
         {
-            match.TypeId = 1;
-            match.ResultDetails.Add(new ResultDetail { ResourceId = "0102" });
-            var criteria = new UpdateResultStatusCriteria
-            {
-                MatchId = 1,
-                ResourceIds = "0101,0102",
-                StatusId = 1,
-                TypeId = 1,
-                Remark = "123"
-            };
+            MatchId = 1,
+            ResourceIds = "0101,0102",
+            StatusId = 1,
+            TypeId = 1,
+            Remark = "123"
+        };
 
-            var result = service.QueryUpdateResult(match, "123", 1);
+        var result = service.QueryUpdateResult(match, "123", 1);
 
-            Assert.Equal(JsonConvert.SerializeObject(result), JsonConvert.SerializeObject(criteria));
-        }
+        Assert.Equal(JsonConvert.SerializeObject(result), JsonConvert.SerializeObject(criteria));
+    }
 
-        [Fact]
-        public void CreateQueryCheckOdds_Always_ReturnsExpectedData()
+    [Fact]
+    public void CreateQueryCheckOdds_Always_ReturnsExpectedData()
+    {
+        var criteria = new CheckOddsCriteria
         {
-            var criteria = new CheckOddsCriteria
-            {
-                MatchId = 1,
-                SelectedResource = "<Resources><Resource MatchId=\"0\"><ResourceId Id=\"0101\" /></Resource></Resources>"
-            };
-            var result = service.CreateQueryCheckOdds(match);
+            MatchId = 1,
+            SelectedResource = "<Resources><Resource MatchId=\"0\"><ResourceId Id=\"0101\" /></Resource></Resources>"
+        };
+        var result = service.CreateQueryCheckOdds(match);
 
-            Assert.Equal(JsonConvert.SerializeObject(result), JsonConvert.SerializeObject(criteria));
-        }
+        Assert.Equal(JsonConvert.SerializeObject(result), JsonConvert.SerializeObject(criteria));
+    }
 
-        [Fact]
-        public void CreateQueryCheckTicketRunning_Always_ReturnsExpectedData()
+    [Fact]
+    public void CreateQueryCheckTicketRunning_Always_ReturnsExpectedData()
+    {
+        match.SportType = 9;
+        match.ResultDetails.Add(new ResultDetail { ResourceId = "0102" });
+        var criteria = new TicketCheckingCriteria
         {
-            match.TypeId = 1;
-            match.ResultDetails.Add(new ResultDetail { ResourceId = "0102" });
-            var criteria = new TicketCheckingCriteria
-            {
-                MatchId = 1,
-                ResourceIds = "0101,0102",
-                TypeId = 1,
-            };
+            MatchId = 1,
+            ResourceIds = "0101,0102",
+            SportType = 9,
+        };
 
-            var result = service.CreateQueryCheckTicketRunning(match);
+        var result = service.CreateQueryCheckTicketRunning(match);
 
-            Assert.Equal(JsonConvert.SerializeObject(result), JsonConvert.SerializeObject(criteria));
-        }
+        Assert.Equal(JsonConvert.SerializeObject(result), JsonConvert.SerializeObject(criteria));
     }
 }

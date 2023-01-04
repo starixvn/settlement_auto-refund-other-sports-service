@@ -1,163 +1,83 @@
-﻿using AutoRefundOtherSports.Criteria;
-using AutoRefundOtherSports.Models;
-using Fanex.Caching;
-using Fanex.Data.Repository;
-using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿namespace AutoRefundOtherSports.Services;
 
-namespace AutoRefundOtherSports.Services
+public interface MatchService
 {
-    public interface IMatchService
+    Task<List<Match>> GetMatches();
+
+    Task CheckMissedMatch();
+
+    Task HandleAutoRefundException(Match match, AutoRefundException exception);
+}
+
+public class MatchServiceImp : MatchService
+{
+    private readonly IDynamicRepository repository;
+
+    private const string KeyLeagueId = "Settlement-AutoPayoutOtherSport-LeagueId";
+
+    private readonly ICache cache;
+
+    private readonly AppSettingsKey appSettingsKey;
+
+    private readonly LoggingService loggingService;
+
+    public MatchServiceImp(IDynamicRepository repository,
+        ICache cache,
+        IOptions<AppSettingsKey> appSettingsKey,
+        LoggingService loggingService)
     {
-        Task<List<Match>> GetMatches();
-
-        Task Update(Match match, string remark, int status);
-
-        Task Push(Match match);
-
-        Task CheckMissedMatch();
+        this.repository = repository;
+        this.cache = cache;
+        this.appSettingsKey = appSettingsKey.Value;
+        this.loggingService = loggingService;
     }
 
-    public class MatchServiceImp : IMatchService
+    public async Task<List<Match>> GetMatches()
     {
-        private readonly IDynamicRepository repository;
+        var resultDetails = (await repository.FetchAsync<ResultDetail>(new ResultListingCriteria { SportType = SportType.Badminton })).ToList();
+        var resultDetailsVolleyball = (await repository.FetchAsync<ResultDetail>(new ResultListingCriteria { SportType = SportType.Volleyball })).ToList();
+        var matchVolleyball = GroupMatch(resultDetailsVolleyball);
+        var matches = GroupMatch(resultDetails);
+        matches.AddRange(matchVolleyball);
 
-        private const string KeyLeagueId = "Settlement-AutoPayoutOtherSport-LeagueId";
+        var (_, leagueId) = await cache.TryGetAsync<int>(KeyLeagueId);
 
-        private readonly ICache cache;
-
-        private readonly AppSettingsKey appSettingsKey;
-
-        private readonly ICreateQueryService createQueryService;
-
-        private readonly ILoggingService loggingService;
-
-        private const int DeploymentError = 99;
-
-        public MatchServiceImp(IDynamicRepository repository,
-            ICache cache,
-            IOptions<AppSettingsKey> appSettingsKey,
-            ICreateQueryService createQueryService,
-            ILoggingService loggingService)
+        return appSettingsKey.EnvironmentName switch
         {
-            this.repository = repository;
-            this.cache = cache;
-            this.appSettingsKey = appSettingsKey.Value;
-            this.createQueryService = createQueryService;
-            this.loggingService = loggingService;
-        }
+            "PRO" => leagueId > 0
+                                   ? (from m in matches where m.LeagueId != leagueId select m).ToList()
+                                   : matches,
+            "UAT" => (from m in matches where m.LeagueId == leagueId select m).ToList(),
+            _ => matches,
+        };
+    }
 
-        public async Task<List<Match>> GetMatches()
-        {
-            var resultDetails = (await repository.FetchAsync<ResultDetail>(new ResultListingCriteria())).ToList();
-            var matches = GroupMatch(resultDetails);
-
-            cache.TryGet(KeyLeagueId, out int leagueId);
-
-            return appSettingsKey.EnvironmentName switch
+    private static List<Match> GroupMatch(List<ResultDetail> resultDetails)
+    {
+        var matches = resultDetails.GroupBy(result => new { result.MatchId, result.LeagueId, result.TypeId })
+            .Select(match => new Match
             {
-                "PRO" => leagueId > 0
-                                       ? (from m in matches where m.LeagueId != leagueId select m).ToList()
-                                       : matches,
-                "UAT" => (from m in matches where m.LeagueId == leagueId select m).ToList(),
-                _ => matches,
-            };
-        }
+                MatchId = match.Key.MatchId,
+                LeagueId = match.Key.LeagueId,
+                TypeId = match.Key.TypeId,
+                ResultDetails = match.ToList()
+            }).ToList();
 
-        private static List<Match> GroupMatch(List<ResultDetail> resultDetails)
+        return matches;
+    }
+
+    public async Task CheckMissedMatch()
+    {
+        var criteria = new UpdateResultStatusCriteria
         {
-            var matches = resultDetails.GroupBy(result => new { result.MatchId, result.LeagueId, result.TypeId })
-                .Select(match => new Match
-                {
-                    MatchId = match.Key.MatchId,
-                    LeagueId = match.Key.LeagueId,
-                    TypeId = match.Key.TypeId,
-                    ResultDetails = match.ToList()
-                }).ToList();
+            StatusId = MatchStatus.Failed
+        };
+        await repository.ExecuteAsync(criteria);
+    }
 
-            return matches;
-        }
-
-        public async Task Update(Match match, string remark, int status)
-        {
-            var criteria = createQueryService.QueryUpdateResult(match, remark, status);
-
-            await repository.ExecuteAsync(criteria);
-        }
-
-        public async Task Push(Match match)
-        {
-            var result = await SettleMatch(match);
-            if (result.ErrCode == DeploymentError)
-            {
-                await SetFlagDeploySpName();
-            }
-            else
-            {
-                await SettleHedgeMatchOrWriteLog(match, result);
-            }
-        }
-
-        private async Task SettleHedgeMatchOrWriteLog(Match match, Result result)
-        {
-            if (result.IsSuccessful)
-            {
-                await SettleHedgeMatch(match);
-            }
-            else
-            {
-                await loggingService.WriteLog(match, result.ErrMsg);
-                await Update(match, result.ErrMsg, MatchStatus.Failed);
-            }
-        }
-
-        public async Task CheckMissedMatch()
-        {
-            var criteria = new UpdateResultStatusCriteria
-            {
-                StatusId = MatchStatus.Failed
-            };
-            await repository.ExecuteAsync(criteria);
-        }
-
-        private async Task SettleHedgeMatch(Match match)
-        {
-            var hedgeMatch = await GetHedgeMatch(match.MatchId);
-            if (hedgeMatch != null)
-            {
-                match.MatchId = hedgeMatch.MatchId;
-                var result = await SettleMatch(match);
-                if (!result.IsSuccessful)
-                {
-                    await loggingService.WriteLog(match, result.ErrMsg);
-                }
-            }
-        }
-
-        private async Task<HedgeMatchDetail> GetHedgeMatch(int matchId)
-        {
-            var criteria = new GetHedgeMatchCriteria { MatchId = matchId };
-            return await repository.GetAsync<HedgeMatchDetail>(criteria);
-        }
-
-        private async Task<Result> SettleMatch(Match match)
-        {
-            var criteria = createQueryService.QuerySettle(match);
-            await repository.ExecuteAsync(criteria);
-            return new Result
-            {
-                ErrCode = criteria.ErrCode,
-                ErrMsg = criteria.ErrMsg
-            };
-        }
-
-        private async Task SetFlagDeploySpName()
-        {
-            var cachePolicy = new CacheItemOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(int.Parse(appSettingsKey.DeploymentDelay)));
-            await cache.SetAsync(appSettingsKey.DeploymentSpName, 1, cachePolicy);
-        }
+    public async Task HandleAutoRefundException(Match match, AutoRefundException exception)
+    {
+        await loggingService.WriteLog(match, exception);
+        await loggingService.Update(match, exception.Description, MatchStatus.Failed);
     }
 }

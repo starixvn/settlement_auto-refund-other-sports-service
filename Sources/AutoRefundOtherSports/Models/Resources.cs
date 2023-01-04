@@ -1,12 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 
-namespace AutoRefundOtherSports.Models
+namespace AutoRefundOtherSports.Models;
+
+[XmlRoot("Resources")]
+public class Resources<T>
 {
-    [XmlRoot("Resources")]
-    public class Resources<T>
-    {
-        [XmlElement("Resource")]
-        public List<T> ResourceItems { get; set; }
-    }
+    [XmlElement("Resource")]
+    public List<T> ResourceItems { get; set; }
 }

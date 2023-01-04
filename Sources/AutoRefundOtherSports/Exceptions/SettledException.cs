@@ -1,29 +1,27 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 
-namespace AutoRefundOtherSports.Exceptions
+namespace AutoRefundOtherSports.Exceptions;
+
+[Serializable]
+public class SettledException : AutoRefundException
 {
-    [Serializable]
-    public class SettledException : AutoRefundException
+    public SettledException()
     {
-        public SettledException()
-        {
-            Description = "ERROR! Some results have been settled already.";
-        }
+        Description = "ERROR! Some results have been settled incorrectly already.";
+    }
 
-        public SettledException(string message)
-            : base(message)
-        {
-        }
+    public SettledException(string message)
+        : base(message)
+    {
+    }
 
-        public SettledException(string message, Exception innerException)
-            : base(message, innerException)
-        {
-        }
+    public SettledException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+    }
 
-        protected SettledException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
+    protected SettledException(SerializationInfo info, StreamingContext context)
+        : base(info, context)
+    {
     }
 }

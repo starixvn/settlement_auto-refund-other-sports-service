@@ -1,25 +1,28 @@
-﻿using Fanex.Data.Repository;
+﻿using Fanex.Data;
+using Fanex.Data.Repository;
 
-namespace AutoRefundOtherSports.Criteria
+namespace AutoRefundOtherSports.Criteria;
+
+public class CheckMarkedTicketsCriteria : NonQueryCommand
 {
-    public class CheckMarkedTicketsCriteria : NonQueryCommand
+    public int MatchId { get; set; }
+
+    public string ResourceIds { get; set; }
+
+    public bool IsExistMarkedTicket { get; set; }
+
+    public bool IsMergedParlay { get; } = true;
+
+    [SpParam(Ignored = true)]
+    public string DbServer { get; set; }
+
+    public override string GetSettingKey()
     {
-        public int MatchId { get; set; }
+        return $"NAP_Set_EarlySettlement_CheckingMarkedTransaction_{DbServer}";
+    }
 
-        public string ResourceIds { get; set; }
-
-        public bool IsExistMarkedTicket { get; set; }
-
-        public bool IsMergedParlay { get; } = true;
-
-        public override string GetSettingKey()
-        {
-            return "NAP_Set_EarlySettlement_CheckingMarkedTransaction";
-        }
-
-        public override bool IsValid()
-        {
-            return MatchId > 0;
-        }
+    public override bool IsValid()
+    {
+        return MatchId > 0;
     }
 }

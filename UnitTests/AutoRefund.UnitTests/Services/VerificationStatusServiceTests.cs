@@ -1,79 +1,71 @@
-﻿using AutoRefundOtherSports.Criteria;
-using AutoRefundOtherSports.Models;
-using AutoRefundOtherSports.Services;
-using Fanex.Data.Repository;
-using NSubstitute;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json;
-using Xunit;
+﻿using Microsoft.Extensions.Options;
 
-namespace AutoRefund.UnitTests.Services
+namespace AutoRefund.UnitTests.Services;
+
+public class VerificationStatusServiceTests
 {
-    public class VerificationStatusServiceTests
+    private readonly CreateQueryService createQueryService;
+
+    private readonly IDynamicRepository repository;
+
+    private readonly VerificationStatusService service;
+
+    public VerificationStatusServiceTests()
     {
-        private readonly ICreateQueryService createQueryService;
+        createQueryService = Substitute.For<CreateQueryService>();
+        repository = Substitute.For<IDynamicRepository>();
+        var appSettingsOptions = Options.Create(new AppSettingsKey { SiteDbServer = new List<string> { "01", "02" } });
+        service = new VerificationStatusServiceImp(createQueryService, repository, appSettingsOptions);
+    }
 
-        private readonly IDynamicRepository repository;
-
-        private readonly IVerificationStatusService service;
-
-        public VerificationStatusServiceTests()
+    [Fact]
+    public async Task CheckRunningOdds_Always_ResultCriteria()
+    {
+        var criteria = new CheckOddsCriteria();
+        createQueryService.CreateQueryCheckOdds(Arg.Any<Match>()).Returns(criteria);
+        repository.When(fake => fake.ExecuteAsync(criteria)).Do(call =>
         {
-            createQueryService = Substitute.For<ICreateQueryService>();
-            repository = Substitute.For<IDynamicRepository>();
-            service = new VerificationStatusServiceImp(createQueryService, repository);
-        }
+            criteria.ErrCode = 1;
+        });
+        var result = await service.CheckRunningOdds(new Match());
+        Assert.Equal(criteria, result);
+    }
 
-        [Fact]
-        public async Task CheckRunningOdds_Always_ResultCriteria()
+    [Fact]
+    public async Task CheckTicketExclusion_Always_ResultCriteria()
+    {
+        var match = new Match
         {
-            var criteria = new CheckOddsCriteria();
-            createQueryService.CreateQueryCheckOdds(Arg.Any<Match>()).Returns(criteria);
-            repository.When(fake => fake.ExecuteAsync(criteria)).Do(call =>
-            {
-                criteria.ErrCode = 1;
-            });
-            var result = await service.CheckRunningOdds(new Match());
-            Assert.Equal(criteria, result);
-        }
-
-        [Fact]
-        public async Task CheckTicketExclusion_Always_ResultCriteria()
-        {
-            var match = new Match
-            {
-                MatchId = 1,
-                ResultDetails = new List<ResultDetail>
+            MatchId = 1,
+            ResultDetails = new List<ResultDetail>
                 {
-                    new ResultDetail()
+                    new ()
                 }
-            };
+        };
+        await repository.ExecuteAsync(Arg.Do<CheckMarkedTicketsCriteria>(item => item.IsExistMarkedTicket = true));
 
-            var expected = new CheckMarkedTicketsCriteria
-            {
-                MatchId = match.MatchId,
-                ResourceIds = "",
-                IsExistMarkedTicket = true
-            };
-            await repository.ExecuteAsync(Arg.Do<CheckMarkedTicketsCriteria>(item => item.IsExistMarkedTicket = true));
-            var result = await service.CheckTicketExclusion(match);
-            Assert.Equal(JsonConvert.SerializeObject(expected), JsonConvert.SerializeObject(result));
-        }
+        var result = await service.IsExistMarkedTicket(match);
 
-        [Fact]
-        public async Task CheckTicketSettled_Always_ResultCriteria()
+        await repository.Received().ExecuteAsync(Arg.Any<CheckMarkedTicketsCriteria>());
+        Assert.True(result);
+    }
+
+    [Fact]
+    public async Task CheckTicketExclusion_NotExistMarkedTicket_ExecuteAllDB()
+    {
+        var match = new Match
         {
-            var criteria = new TicketCheckingCriteria();
-            createQueryService.CreateQueryCheckTicketRunning(Arg.Any<Match>()).Returns(criteria);
-            repository.When(fake => fake.ExecuteAsync(criteria)).Do(call =>
+            MatchId = 1,
+            ResultDetails = new List<ResultDetail>
             {
-                criteria.ErrCode = 1;
-            });
+                new ()
+            }
+        };
+        await repository.ExecuteAsync(Arg.Do<CheckMarkedTicketsCriteria>(item => item.IsExistMarkedTicket = false));
 
-            var result = await service.CheckTicketSettled(new Match());
-            Assert.Equal(criteria, result);
-        }
+        var result = await service.IsExistMarkedTicket(match);
+
+        await repository.Received(2).ExecuteAsync(Arg.Any<CheckMarkedTicketsCriteria>());
+        Assert.False(result);
     }
 }

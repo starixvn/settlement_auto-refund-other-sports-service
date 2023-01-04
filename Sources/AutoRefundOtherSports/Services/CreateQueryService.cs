@@ -1,97 +1,94 @@
-﻿using AutoRefundOtherSports.Criteria;
-using AutoRefundOtherSports.Models;
-using Kaden.XmlConverter;
-using System.Collections.Generic;
-using System.Linq;
+﻿namespace AutoRefundOtherSports.Services;
 
-namespace AutoRefundOtherSports.Services
+public interface CreateQueryService
 {
-    public interface ICreateQueryService
+    SettleCriteria QuerySettle(Match match);
+
+    UpdateResultStatusCriteria QueryUpdateResult(Match match, string remark, int status);
+
+    CheckOddsCriteria CreateQueryCheckOdds(Match match);
+
+    TicketCheckingCriteria CreateQueryCheckTicketRunning(Match match);
+}
+
+public class CreateQueryServiceImp : CreateQueryService
+{
+    private readonly XmlConvertService xmlConvertService;
+
+    private const int StatusRefunded = 1;
+
+    public CreateQueryServiceImp(XmlConvertService xmlConvertService)
     {
-        SettleCriteria QuerySettle(Match match);
-
-        UpdateResultStatusCriteria QueryUpdateResult(Match match, string remark, int status);
-
-        CheckOddsCriteria CreateQueryCheckOdds(Match match);
-
-        TicketCheckingCriteria CreateQueryCheckTicketRunning(Match match);
+        this.xmlConvertService = xmlConvertService;
     }
 
-    public class CreateQueryServiceImp : ICreateQueryService
+    public SettleCriteria QuerySettle(Match match)
     {
-        private readonly XmlConvertService xmlConvertService;
-
-        public CreateQueryServiceImp(XmlConvertService xmlConvertService)
+        var resourcesResult = CreateResources(match.ResultDetails);
+        var criteria = new SettleCriteria
         {
-            this.xmlConvertService = xmlConvertService;
-        }
+            MatchId = match.MatchId,
+            SelectedResources = resourcesResult,
+            BroadcastSessionId = Guid.NewGuid().ToString()
+        };
 
-        public SettleCriteria QuerySettle(Match match)
+        return criteria;
+    }
+
+    private string CreateResources(List<ResultDetail> selectedResources)
+    {
+        var resources = new Resources<ResultDetail>
         {
-            var resourcesResult = CreateResources(match.ResultDetails);
-            var criteria = new SettleCriteria
-            {
-                MatchId = match.MatchId,
-                SelectedResources = resourcesResult
-            };
+            ResourceItems = selectedResources
+        };
 
-            return criteria;
-        }
+        return xmlConvertService.Serialize(resources);
+    }
 
-        private string CreateResources(List<ResultDetail> selectedResources)
+    public UpdateResultStatusCriteria QueryUpdateResult(Match match, string remark, int status)
+    {
+        return new UpdateResultStatusCriteria
         {
-            var resources = new Resources<ResultDetail>
-            {
-                ResourceItems = selectedResources
-            };
+            MatchId = match.MatchId,
+            ResourceIds = string.Join(",", match.ResultDetails.Select(item => item.ResourceId).ToList()),
+            StatusId = status,
+            TypeId = match.TypeId,
+            Remark = remark,
+            TryCount = match.TryCount
+        };
+    }
 
-            return xmlConvertService.Serialize(resources);
-        }
-
-        public UpdateResultStatusCriteria QueryUpdateResult(Match match, string remark, int status)
+    public CheckOddsCriteria CreateQueryCheckOdds(Match match)
+    {
+        return new CheckOddsCriteria
         {
-            return new UpdateResultStatusCriteria
-            {
-                MatchId = match.MatchId,
-                ResourceIds = string.Join(",", match.ResultDetails.Select(item => item.ResourceId).ToList()),
-                StatusId = status,
-                TypeId = match.TypeId,
-                Remark = remark
-            };
-        }
+            MatchId = match.MatchId,
+            SelectedResource = CreateMatchResources(match.ResultDetails)
+        };
+    }
 
-        public CheckOddsCriteria CreateQueryCheckOdds(Match match)
+    public TicketCheckingCriteria CreateQueryCheckTicketRunning(Match match)
+    {
+        return new TicketCheckingCriteria
         {
-            return new CheckOddsCriteria
-            {
-                MatchId = match.MatchId,
-                SelectedResource = CreateMatchResources(match.ResultDetails)
-            };
-        }
+            MatchId = match.MatchId,
+            SportType = match.SportType,
+            ResourceIds = string.Join(",", match.ResultDetails.Where(item => item.SettlementStatusId != StatusRefunded).Select(item => item.ResourceId).ToList())
+        };
+    }
 
-        public TicketCheckingCriteria CreateQueryCheckTicketRunning(Match match)
+    private string CreateMatchResources(List<ResultDetail> selectedResources)
+    {
+        var items = new CheckOddsItem
         {
-            return new TicketCheckingCriteria
-            {
-                MatchId = match.MatchId,
-                TypeId = match.TypeId,
-                ResourceIds = string.Join(",", match.ResultDetails.Select(item => item.ResourceId).ToList())
-            };
-        }
+            ResourceIds = selectedResources.Select(item => item.ResourceId).ToList()
+        };
 
-        private string CreateMatchResources(List<ResultDetail> selectedResources)
+        var resources = new Resources<CheckOddsItem>
         {
-            var items = new CheckOddsItem
-            {
-                ResourceIds = selectedResources.Select(item => item.ResourceId).ToList()
-            };
+            ResourceItems = new List<CheckOddsItem> { items }
+        };
 
-            var resources = new Resources<CheckOddsItem>
-            {
-                ResourceItems = new List<CheckOddsItem> { items }
-            };
-
-            return xmlConvertService.Serialize(resources);
-        }
+        return xmlConvertService.Serialize(resources);
     }
 }

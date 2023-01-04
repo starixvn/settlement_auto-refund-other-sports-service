@@ -1,107 +1,83 @@
 ﻿using AutoRefundOtherSports.Exceptions;
-using AutoRefundOtherSports.Models;
-using AutoRefundOtherSports.Services;
-using NSubstitute;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using AutoRefundOtherSports.Criteria;
-using Xunit;
-using AutoRefundOtherSports;
+using Microsoft.Extensions.Options;
 
-namespace AutoRefund.UnitTests.Services
+namespace AutoRefund.UnitTests.Services;
+
+public class VerificationServiceTests
 {
-    public class VerificationServiceTests
+    private readonly RetryValidationService retryValidationService;
+
+    private readonly VerificationService service;
+
+    public VerificationServiceTests()
     {
-        private readonly IVerificationStatusService verificationStatusService;
-
-        private readonly IVerificationService service;
-
-        public VerificationServiceTests()
+        retryValidationService = Substitute.For<RetryValidationService>();
+        var appSettings = new AppSettingsKey
         {
-            verificationStatusService = Substitute.For<IVerificationStatusService>();
-            service = new VerificationServiceImp(verificationStatusService);
-        }
+            RetryCount = 5,
+            RetryInterval = 300
+        };
+        var options = Options.Create(appSettings);
+        service = new VerificationServiceImp(retryValidationService);
+    }
 
-        [Fact]
-        public async Task VerifyResultRunning_RetryFirstTime_ReturnAndNotCallRelatedMethods()
+    [Fact]
+    public void VerifyResultRunning_ResultSettled_ThrowException()
+    {
+        var match = new Match
         {
-            await service.VerifyResultRunning(new Match(), 1);
-
-            await verificationStatusService.DidNotReceive().CheckTicketSettled(Arg.Any<Match>());
-        }
-
-        [Fact]
-        public async Task VerifyResultRunning_ResultSettled_ThrowException()
-        {
-            var match = new Match
-            {
-                ResultDetails = new List<ResultDetail>
+            ResultDetails = new List<ResultDetail>
                 {
-                    new ResultDetail { ResultStatusId = 4 }
+                    new ResultDetail { SettlementStatusId = 4 }
                 }
-            };
-            await Assert.ThrowsAsync<SettledException>(() => service.VerifyResultRunning(match, 0));
-        }
+        };
+        Assert.Throws<SettledException>(() => service.VerifyResultRunning(match));
+    }
 
-        [Fact]
-        public async Task VerifyResultRunning_ResultRunning_ThrowException()
+    [Fact]
+    public void VerifyResultRunning_ResultUncalc_ThrowException()
+    {
+        var match = new Match
         {
-            var match = new Match
+            ResultDetails = new List<ResultDetail>
             {
-                ResultDetails = new List<ResultDetail>
-                {
-                    new ResultDetail { ResultStatusId = 1 }
-                }
-            };
-            verificationStatusService.CheckTicketSettled(match).Returns(new TicketCheckingCriteria { ErrCode = 1 });
+                new ResultDetail { ResultStatusId = 4 }
+            }
+        };
+        Assert.Throws<SettledException>(() => service.VerifyResultRunning(match));
+    }
 
-            await Assert.ThrowsAsync<AutoRefundException>(() => service.VerifyResultRunning(match, 0));
-        }
-
-        [Fact]
-        public async Task VerifyResultRunning_ResultValid_NotThrowException()
+    [Fact]
+    public void VerifyResultRunning_ResultValid_NotThrowException()
+    {
+        var match = new Match
         {
-            var match = new Match
-            {
-                ResultDetails = new List<ResultDetail>
+            ResultDetails = new List<ResultDetail>
                 {
                     new ResultDetail { ResultStatusId = 1 }
                 }
-            };
-            verificationStatusService.CheckTicketSettled(match).Returns(new TicketCheckingCriteria { ErrCode = 0 });
+        };
 
-            var exception = await Record.ExceptionAsync(() => service.VerifyResultRunning(match, 0));
-            Assert.Null(exception);
-        }
+        var exception = Record.Exception(() => service.VerifyResultRunning(match));
+        Assert.Null(exception);
+    }
 
-        [Fact]
-        public async Task VerifyResultStatus_ExistRunningOdds_ThrowException()
-        {
-            var match = new Match();
-            verificationStatusService.CheckRunningOdds(match).Returns(new CheckOddsCriteria { ErrCode = 1 });
+    [Fact]
+    public async Task VerifyResultStatus_ValidationFailure_ThrowExceptionAfterRetry()
+    {
+        var match = new Match();
+        retryValidationService.IsCheckingOddsAndMarkedTicket(match).Returns(false);
 
-            await Assert.ThrowsAsync<AutoRefundException>(() => service.VerifyResultStatus(match));
-        }
+        await Assert.ThrowsAsync<OddsAndMarkedTicketException>(() => service.VerifyResultStatus(match));
+    }
 
-        [Fact]
-        public async Task VerifyResultStatus_ExistMarkedTicket_ThrowException()
-        {
-            var match = new Match();
-            verificationStatusService.CheckRunningOdds(match).Returns(new CheckOddsCriteria());
-            verificationStatusService.CheckTicketExclusion(match).Returns(new CheckMarkedTicketsCriteria { IsExistMarkedTicket = true });
+    [Fact]
+    public async Task VerifyResultStatus_ValidationPassed_DoNotThrowAnyThing()
+    {
+        var match = new Match();
+        retryValidationService.IsCheckingOddsAndMarkedTicket(match).Returns(true);
 
-            await Assert.ThrowsAsync<TicketExclusionException>(() => service.VerifyResultStatus(match));
-        }
-
-        [Fact]
-        public async Task VerifyResultStatus_ResultValid_NotThrowException()
-        {
-            var match = new Match();
-            verificationStatusService.CheckRunningOdds(match).Returns(new CheckOddsCriteria());
-            verificationStatusService.CheckTicketExclusion(match).Returns(new CheckMarkedTicketsCriteria());
-
-            var exception = await Record.ExceptionAsync(() => service.VerifyResultStatus(match));
-            Assert.Null(exception);
-        }
+        var exception = await Record.ExceptionAsync(() => service.VerifyResultStatus(match));
+        Assert.Null(exception);
     }
 }
