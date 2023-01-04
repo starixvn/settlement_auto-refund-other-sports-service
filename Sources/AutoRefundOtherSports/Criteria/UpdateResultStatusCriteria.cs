@@ -1,6 +1,4 @@
-﻿using Fanex.Data.Repository;
-
-namespace AutoRefundOtherSports.Criteria;
+﻿namespace AutoRefundOtherSports.Criteria;
 
 public class UpdateResultStatusCriteria : NonQueryCommand
 {
@@ -13,6 +11,8 @@ public class UpdateResultStatusCriteria : NonQueryCommand
     public int StatusId { get; set; }
 
     public string Remark { get; set; }
+
+    public int TryCount { get; set; }
 
     public override bool IsValid()
     {

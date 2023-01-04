@@ -12,6 +12,8 @@ public class Match
 
     public List<ResultDetail> ResultDetails { get; set; }
 
+    public int TryCount { get; set; } = 0;
+
     public override bool Equals(object obj)
     {
         return obj != null

@@ -53,7 +53,8 @@ public class CreateQueryServiceImp : CreateQueryService
             ResourceIds = string.Join(",", match.ResultDetails.Select(item => item.ResourceId).ToList()),
             StatusId = status,
             TypeId = match.TypeId,
-            Remark = remark
+            Remark = remark,
+            TryCount = match.TryCount
         };
     }
 

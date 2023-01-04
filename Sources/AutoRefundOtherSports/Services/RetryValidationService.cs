@@ -41,6 +41,7 @@ public class RetryValidationServiceImp : RetryValidationService
             if (i < appSettingsKey.RetryCount)
             {
                 await Task.Delay(appSettingsKey.RetryInterval);
+                match.TryCount++;
             }
         }
 

@@ -34,11 +34,13 @@ public class RetryValidationServiceTests
     public async Task IsCheckingOddsAndMarkedTicket_ExistRunningOdds_RetryValidate()
     {
         verificationStatusService.CheckRunningOdds(Arg.Any<Match>()).Returns(new CheckOddsCriteria { ErrCode = 1 });
+        var match = new Match();
 
-        var actual = await service.IsCheckingOddsAndMarkedTicket(new Match());
+        var actual = await service.IsCheckingOddsAndMarkedTicket(match);
 
         await verificationStatusService.Received(3).CheckRunningOdds(Arg.Any<Match>());
         await verificationStatusService.DidNotReceive().IsExistMarkedTicket(Arg.Any<Match>());
+        Assert.Equal(2, match.TryCount);
         Assert.False(actual);
     }
 
@@ -47,11 +49,13 @@ public class RetryValidationServiceTests
     {
         verificationStatusService.CheckRunningOdds(Arg.Any<Match>()).Returns(new CheckOddsCriteria());
         verificationStatusService.IsExistMarkedTicket(Arg.Any<Match>()).Returns(true);
+        var match = new Match();
 
-        var actual = await service.IsCheckingOddsAndMarkedTicket(new Match());
+        var actual = await service.IsCheckingOddsAndMarkedTicket(match);
 
         await verificationStatusService.Received(3).CheckRunningOdds(Arg.Any<Match>());
         await verificationStatusService.Received(3).IsExistMarkedTicket(Arg.Any<Match>());
+        Assert.Equal(2, match.TryCount);
         Assert.False(actual);
     }
 
@@ -60,11 +64,13 @@ public class RetryValidationServiceTests
     {
         verificationStatusService.CheckRunningOdds(Arg.Any<Match>()).Returns(new CheckOddsCriteria());
         verificationStatusService.IsExistMarkedTicket(Arg.Any<Match>()).Returns(false);
+        var match = new Match();
 
-        var actual = await service.IsCheckingOddsAndMarkedTicket(new Match());
+        var actual = await service.IsCheckingOddsAndMarkedTicket(match);
 
         await verificationStatusService.Received(1).CheckRunningOdds(Arg.Any<Match>());
         await verificationStatusService.Received(1).IsExistMarkedTicket(Arg.Any<Match>());
+        Assert.Equal(0, match.TryCount);
         Assert.True(actual);
     }
 
