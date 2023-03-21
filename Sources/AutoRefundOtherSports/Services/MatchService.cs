@@ -40,15 +40,16 @@ public class MatchServiceImp : MatchService
         var matches = GroupMatch(resultDetails);
         matches.AddRange(matchVolleyball);
 
-        var (_, leagueId) = await cache.TryGetAsync<int>(KeyLeagueId);
+        var (_, response) = await cache.TryGetAsync<string>(KeyLeagueId);
+        var leagueIds = (response ?? "").Split(",");
 
         return appSettingsKey.EnvironmentName switch
         {
-            "PRO" => leagueId > 0
-                                   ? (from m in matches where m.LeagueId != leagueId select m).ToList()
-                                   : matches,
-            "UAT" => (from m in matches where m.LeagueId == leagueId select m).ToList(),
-            _ => matches,
+            "PRO" => leagueIds.Length > 0
+                ? matches.Where(m => !leagueIds.Contains(m.LeagueId.ToString())).ToList()
+                : matches,
+            "UAT" => matches.Where(m => leagueIds.Contains(m.LeagueId.ToString())).ToList(),
+            _ => matches
         };
     }
 
