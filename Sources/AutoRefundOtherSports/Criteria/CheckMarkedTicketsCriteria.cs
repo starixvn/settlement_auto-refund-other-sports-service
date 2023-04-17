@@ -1,5 +1,4 @@
 ﻿using Fanex.Data;
-using Fanex.Data.Repository;
 
 namespace AutoRefundOtherSports.Criteria;
 
@@ -10,8 +9,6 @@ public class CheckMarkedTicketsCriteria : NonQueryCommand
     public string ResourceIds { get; set; }
 
     public bool IsExistMarkedTicket { get; set; }
-
-    public bool IsMergedParlay { get; } = true;
 
     [SpParam(Ignored = true)]
     public string DbServer { get; set; }
