@@ -13,8 +13,6 @@ public class MatchServiceImp : MatchService
 {
     private readonly IDynamicRepository repository;
 
-    private const string KeyLeagueId = "Settlement-AutoPayoutOtherSport-LeagueId";
-
     private readonly ICache cache;
 
     private readonly AppSettingsKey appSettingsKey;
@@ -40,7 +38,7 @@ public class MatchServiceImp : MatchService
         var matches = GroupMatch(resultDetails);
         matches.AddRange(matchVolleyball);
 
-        var (_, response) = await cache.TryGetAsync<string>(KeyLeagueId);
+        var (_, response) = await cache.TryGetAsync<string>(CacheKey.LeagueId);
         var leagueIds = (response ?? "").Split(",");
 
         return appSettingsKey.EnvironmentName switch

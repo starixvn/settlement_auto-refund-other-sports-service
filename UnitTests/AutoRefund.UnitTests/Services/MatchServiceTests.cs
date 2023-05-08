@@ -23,7 +23,7 @@ public class MatchServiceTests
         loggingService = Substitute.For<LoggingService>();
         cache = new RedisCache(new RedisCacheOptions
         {
-            ConnectionString = $"ha.nexdev.net:16379,password=foo1@bared,defaultDatabase=11",
+            ConnectionString = "10.18.200.131:16379,password=foo1@bared,defaultDatabase=11",
             ApplicationName = "Settlement-LOCAL"
         });
         var settings = new AppSettingsKey()
@@ -45,18 +45,17 @@ public class MatchServiceTests
         service = new MatchServiceImp(repository, cache, appSettingsOptions, loggingService);
     }
 
-    private async Task SetLeague(int leagueId)
+    private async Task SetLeague(string leagueId)
     {
-        const string keyIncludeLeagueIds = "Settlement-AutoPayoutOtherSport-LeagueId";
         const int cacheExpiredInDays = 1095;
         var cachePolicy = new CacheItemOptions().SetAbsoluteExpiration(TimeSpan.FromDays(cacheExpiredInDays));
-        await cache.SetAsync(keyIncludeLeagueIds, leagueId, cachePolicy);
+        await cache.SetAsync(CacheKey.LeagueId, leagueId, cachePolicy);
     }
 
     [Fact]
     public async Task GetMatches_ExistedIncludeLeagueIdAndExcludeLeagueId_ReturnsRightMatches()
     {
-        await SetLeague(123);
+        await SetLeague("123");
         repository.FetchAsync<ResultDetail>(Arg.Any<ResultListingCriteria>()).Returns(resultDetails);
 
         var list = await service.GetMatches();
@@ -67,7 +66,7 @@ public class MatchServiceTests
     [Fact]
     public async Task GetMatches_NotExistLeagueTest_ReturnAllMatches()
     {
-        await SetLeague(0);
+        await SetLeague("0");
         repository.FetchAsync<ResultDetail>(Arg.Is<ResultListingCriteria>(i => i.SportType == SportType.Volleyball)).Returns(resultDetails);
 
         var list = await service.GetMatches();
@@ -78,7 +77,7 @@ public class MatchServiceTests
     [Fact]
     public async Task GetMatches_Always_ReturnAllMatchesTwoSport()
     {
-        await SetLeague(0);
+        await SetLeague("0");
         repository.FetchAsync<ResultDetail>(Arg.Any<ResultListingCriteria>()).Returns(resultDetails);
 
         var list = await service.GetMatches();
@@ -97,7 +96,7 @@ public class MatchServiceTests
         var appSettingsOptions = Options.Create(settings);
 
         var tempService = new MatchServiceImp(repository, cache, appSettingsOptions, loggingService);
-        await SetLeague(123);
+        await SetLeague("123");
 
         repository.FetchAsync<ResultDetail>(Arg.Any<ResultListingCriteria>()).Returns(resultDetails);
 
