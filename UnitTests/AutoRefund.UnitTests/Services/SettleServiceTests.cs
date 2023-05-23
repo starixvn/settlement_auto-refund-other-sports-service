@@ -18,6 +18,7 @@ public class SettleServiceTests
     private readonly LoggingService loggingService;
 
     private readonly SettleService service;
+    private readonly LogDirectlyService logDirectlyService;
 
     public SettleServiceTests()
     {
@@ -26,6 +27,7 @@ public class SettleServiceTests
         scaleOutSettleService = Substitute.For<ScaleOutSettleService>();
         retryValidationService = Substitute.For<RetryValidationService>();
         loggingService = Substitute.For<LoggingService>();
+        logDirectlyService = Substitute.For<LogDirectlyService>();
         var appSetting = new AppSettingsKey
         {
             RetryValidateCount = 4,
@@ -33,7 +35,7 @@ public class SettleServiceTests
             SiteDbServer = new List<string> { "01", "02" }
         };
         var appSettings = Options.Create(appSetting);
-        service = new SettleServiceImp(createQueryService, repository, scaleOutSettleService, retryValidationService, loggingService, appSettings);
+        service = new SettleServiceImp(createQueryService, repository, scaleOutSettleService, retryValidationService, loggingService, appSettings, logDirectlyService);
     }
 
     [Fact]

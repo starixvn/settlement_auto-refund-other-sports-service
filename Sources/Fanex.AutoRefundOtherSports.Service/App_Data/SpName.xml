@@ -9,6 +9,7 @@
     <Setting Key="NAP_Set_AutoRefundOS_ResultUpd" SpName="NAP_Set_AutoRefundOS_ResultUpd" DbName="DBPRO.bodb02.bodbAdminNet" />
     <Setting Key="NAP_Admin_MatchInfoUpd" SpName="NAP_Admin_MatchInfoUpd" DbName="DBPRO.bodb02.bodbAdminNet" />
     <Setting Key="NAP_Admin_Settlement_Validation_Event" SpName="NAP_Admin_Settlement_Validation_Event" DbName="DBPRO.bodb02.bodbAdminNet" />
+    <Setting Key="WriteLog_UserLog_Settle" SpName="WriteLog_UserLog_Settle" DbName="DBLOG.bodb_CustomerLog.bodbAdminNet" TimeOut="20" />
   </Function>
   <Function Name="Scale Out TransDb">
     <Function Name="NAP_Set_EarlySettlement_CheckingMarkedTransaction">
