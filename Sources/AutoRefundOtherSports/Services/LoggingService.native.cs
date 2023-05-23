@@ -1,4 +1,6 @@
-﻿namespace AutoRefundOtherSports.Services;
+﻿using Fanex.Logging;
+
+namespace AutoRefundOtherSports.Services;
 
 public interface LoggingService
 {
@@ -7,6 +9,8 @@ public interface LoggingService
     Task WriteLog(Match match, AutoRefundException exception);
 
     Task Update(Match match, string remark, int status);
+
+    void WriteLog(int matchId, string message);
 }
 
 public class LoggingServiceImp : LoggingService
@@ -54,5 +58,23 @@ public class LoggingServiceImp : LoggingService
             };
 
         return string.Join("<br/>", remark);
+    }
+
+    public void WriteLog(int matchId, string message)
+    {
+        try
+        {
+            var criteria = new LogDirectlyCriteria
+            {
+                Extend = matchId,
+                Doing = message,
+            };
+
+            repository.Execute(criteria);
+        }
+        catch (Exception e)
+        {
+            LogService.Error("Fanex.AutoEarlyOtherSports.Service(Write Log Directly): ", e);
+        }
     }
 }
