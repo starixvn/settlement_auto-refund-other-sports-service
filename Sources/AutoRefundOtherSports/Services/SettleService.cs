@@ -22,18 +22,23 @@ public class SettleServiceImp : SettleService
 
     private readonly AppSettingsKey appSettingsKey;
 
+    private readonly LogDirectlyService logDirectlyService;
+
+
     public SettleServiceImp(CreateQueryService createQueryService,
         IDynamicRepository repository,
         ScaleOutSettleService scaleOutSettleService,
         RetryValidationService retryValidationService,
         LoggingService loggingService,
-        IOptions<AppSettingsKey> appSettingsKey)
+        IOptions<AppSettingsKey> appSettingsKey,
+        LogDirectlyService logDirectlyService)
     {
         this.createQueryService = createQueryService;
         this.repository = repository;
         this.scaleOutSettleService = scaleOutSettleService;
         this.retryValidationService = retryValidationService;
         this.loggingService = loggingService;
+        this.logDirectlyService = logDirectlyService;
         this.appSettingsKey = appSettingsKey.Value;
     }
 
@@ -54,6 +59,9 @@ public class SettleServiceImp : SettleService
         {
             await loggingService.Update(match, string.Empty, MatchStatus.Running);
             await UpdateMatchInfo(criteria);
+
+            logDirectlyService.WriteLog(criteria.MatchId, GenerateLogMessage(criteria));
+
             await ExecuteAsync(criteria);
             await SettleHedgeMatch(match, criteria);
         }
@@ -91,6 +99,9 @@ public class SettleServiceImp : SettleService
 
         await scaleOutSettleService.UpdateMatchInfo(requestUpdateInfo);
     }
+
+    private string GenerateLogMessage(SettleCriteria criteria)
+        => $"NAP: Auto Payout Calculate {criteria.Action} for matchId: {criteria.MatchId} Result: {criteria.SelectedResources}";
 
     private async Task ExecuteAsync(SettleCriteria criteria)
     {

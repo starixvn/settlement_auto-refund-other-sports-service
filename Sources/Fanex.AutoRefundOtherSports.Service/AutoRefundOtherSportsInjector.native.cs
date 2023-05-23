@@ -36,6 +36,7 @@ public static class AutoRefundInjector
         service.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         service.AddSingleton<GeneralService, GeneralServiceImp>();
         service.AddSingleton<RetryValidationService, RetryValidationServiceImp>();
+        service.AddSingleton<LogDirectlyService, LogDirectlyServiceImp>();
 
         service.AddSingleton(new UMClientConfiguration().Initialize(configuration));
         service.AddSingleton<IUMCacheService, UMCacheService>();
