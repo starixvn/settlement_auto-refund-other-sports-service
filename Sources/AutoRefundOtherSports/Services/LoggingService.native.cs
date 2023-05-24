@@ -74,7 +74,7 @@ public class LoggingServiceImp : LoggingService
         }
         catch (Exception e)
         {
-            LogService.Error("Fanex.AutoEarlyOtherSports.Service(Write Log Directly): ", e);
+            LogService.Error("Fanex.AutoRefundOtherSports.Service(Write Log Directly): ", e);
         }
     }
 }
