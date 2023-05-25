@@ -74,21 +74,4 @@ public class CreateQueryServiceTests
 
         Assert.Equal(JsonConvert.SerializeObject(result), JsonConvert.SerializeObject(criteria));
     }
-
-    [Fact]
-    public void CreateQueryCheckTicketRunning_Always_ReturnsExpectedData()
-    {
-        match.SportType = 9;
-        match.ResultDetails.Add(new ResultDetail { ResourceId = "0102" });
-        var criteria = new TicketCheckingCriteria
-        {
-            MatchId = 1,
-            ResourceIds = "0101,0102",
-            SportType = 9,
-        };
-
-        var result = service.CreateQueryCheckTicketRunning(match);
-
-        Assert.Equal(JsonConvert.SerializeObject(result), JsonConvert.SerializeObject(criteria));
-    }
 }

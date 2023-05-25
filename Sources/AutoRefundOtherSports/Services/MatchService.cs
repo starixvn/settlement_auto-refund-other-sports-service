@@ -19,6 +19,8 @@ public class MatchServiceImp : MatchService
 
     private readonly LoggingService loggingService;
 
+    private readonly List<int> listSport = new() { SportType.Volleyball, SportType.Badminton, SportType.Tennis };
+
     public MatchServiceImp(IDynamicRepository repository,
         ICache cache,
         IOptions<AppSettingsKey> appSettingsKey,
@@ -32,13 +34,11 @@ public class MatchServiceImp : MatchService
 
     public async Task<List<Match>> GetMatches()
     {
-        var resultDetails = (await repository.FetchAsync<ResultDetail>(new ResultListingCriteria { SportType = SportType.Badminton })).ToList();
-        var resultDetailsVolleyball = (await repository.FetchAsync<ResultDetail>(new ResultListingCriteria { SportType = SportType.Volleyball })).ToList();
-        var matchVolleyball = GroupMatch(resultDetailsVolleyball);
+        var resultDetails = await GetResultDetail();
         var matches = GroupMatch(resultDetails);
-        matches.AddRange(matchVolleyball);
 
         var (_, response) = await cache.TryGetAsync<string>(CacheKey.LeagueId);
+
         var leagueIds = (response ?? "").Split(",");
 
         return appSettingsKey.EnvironmentName switch
@@ -51,7 +51,20 @@ public class MatchServiceImp : MatchService
         };
     }
 
-    private static List<Match> GroupMatch(List<ResultDetail> resultDetails)
+    public async Task<IEnumerable<ResultDetail>> GetResultDetail()
+    {
+        var resultDetails = new List<ResultDetail>();
+
+        foreach (var sportType in listSport)
+        {
+            var resultDetail = (await repository.FetchAsync<ResultDetail>(new ResultListingCriteria { SportType = sportType })).ToList();
+            resultDetails.AddRange(resultDetail);
+        }
+
+        return resultDetails;
+    }
+
+    private static List<Match> GroupMatch(IEnumerable<ResultDetail> resultDetails)
     {
         var matches = resultDetails.GroupBy(result => new { result.MatchId, result.LeagueId, result.TypeId })
             .Select(match => new Match

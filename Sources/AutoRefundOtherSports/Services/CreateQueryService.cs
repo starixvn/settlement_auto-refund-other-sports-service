@@ -7,15 +7,11 @@ public interface CreateQueryService
     UpdateResultStatusCriteria QueryUpdateResult(Match match, string remark, int status);
 
     CheckOddsCriteria CreateQueryCheckOdds(Match match);
-
-    TicketCheckingCriteria CreateQueryCheckTicketRunning(Match match);
 }
 
 public class CreateQueryServiceImp : CreateQueryService
 {
     private readonly XmlConvertService xmlConvertService;
-
-    private const int StatusRefunded = 1;
 
     public CreateQueryServiceImp(XmlConvertService xmlConvertService)
     {
@@ -64,16 +60,6 @@ public class CreateQueryServiceImp : CreateQueryService
         {
             MatchId = match.MatchId,
             SelectedResource = CreateMatchResources(match.ResultDetails)
-        };
-    }
-
-    public TicketCheckingCriteria CreateQueryCheckTicketRunning(Match match)
-    {
-        return new TicketCheckingCriteria
-        {
-            MatchId = match.MatchId,
-            SportType = match.SportType,
-            ResourceIds = string.Join(",", match.ResultDetails.Where(item => item.SettlementStatusId != StatusRefunded).Select(item => item.ResourceId).ToList())
         };
     }
 
