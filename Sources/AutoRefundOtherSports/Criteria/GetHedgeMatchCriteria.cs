@@ -1,6 +1,4 @@
-﻿using Fanex.Data.Repository;
-
-namespace AutoRefundOtherSports.Criteria;
+﻿namespace AutoRefundOtherSports.Criteria;
 
 public class GetHedgeMatchCriteria : CriteriaBase
 {

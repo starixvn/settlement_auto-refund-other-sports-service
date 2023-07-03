@@ -1,4 +1,4 @@
-﻿using AutoRefundOtherSports;
+﻿using AutoRefundOtherSports.Exceptions;
 
 namespace AutoRefund.UnitTests.Services;
 
@@ -10,8 +10,6 @@ public class RefundControllerTests
 
     private readonly MatchPoolService matchPoolService;
 
-    private readonly LoggingService loggingService;
-
     private readonly SettleService settleService;
 
     private readonly RefundController controller;
@@ -21,10 +19,9 @@ public class RefundControllerTests
         matchPoolService = Substitute.For<MatchPoolService>();
         verificationService = Substitute.For<VerificationService>();
         matchService = Substitute.For<MatchService>();
-        loggingService = Substitute.For<LoggingService>();
         settleService = Substitute.For<SettleService>();
 
-        controller = new RefundControllerImp(matchService, verificationService, matchPoolService, loggingService, settleService);
+        controller = new RefundControllerImp(matchService, verificationService, matchPoolService, settleService);
     }
 
     [Fact]
@@ -43,7 +40,7 @@ public class RefundControllerTests
     public async Task Process_ThrowException_InvokeRelatedMethodsAndStopLoop()
     {
         var match = new Match();
-        verificationService.When(fake => fake.VerifyResultRunning(match)).Do(call => { throw new AutoRefundException(); });
+        verificationService.When(fake => fake.VerifyResultRunning(match)).Do(_ => { throw new AutoRefundException(); });
 
         await controller.Process(match);
 

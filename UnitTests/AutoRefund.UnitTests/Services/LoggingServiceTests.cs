@@ -1,4 +1,4 @@
-﻿using AutoRefundOtherSports;
+﻿using AutoRefundOtherSports.Exceptions;
 
 namespace AutoRefund.UnitTests.Services
 {

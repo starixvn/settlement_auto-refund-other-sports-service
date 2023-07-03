@@ -42,7 +42,7 @@ public class SettleServiceTests
         createQueryService.QuerySettle(Arg.Any<Match>()).Returns(new SettleCriteria());
         retryValidationService.ValidateEventTicket(Arg.Any<EventTicketRequest>()).Returns(new Result { ErrMsg = "test", ErrCode = 1 });
 
-        var actual = service.SettleMatch(new Match());
+        await service.SettleMatch(new Match());
 
         await loggingService.DidNotReceive().Update(Arg.Any<Match>(), "", MatchStatus.Running);
         await scaleOutSettleService.DidNotReceive().UpdateMatchInfo(Arg.Any<UpdateMatchInfoRequest>());
@@ -60,6 +60,7 @@ public class SettleServiceTests
         await service.SettleMatch(new Match());
 
         await loggingService.Received().Update(Arg.Any<Match>(), "", MatchStatus.Running);
+        loggingService.Received().InsertResettleLog(Arg.Any<SettleCriteria>(), Arg.Any<int>());
         await scaleOutSettleService.Received().UpdateMatchInfo(Arg.Any<UpdateMatchInfoRequest>());
         await repository.Received(2).ExecuteAsync(Arg.Any<SettleCriteria>());
     }

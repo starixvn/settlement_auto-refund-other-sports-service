@@ -1,4 +1,6 @@
-﻿namespace AutoRefundOtherSports.Services;
+﻿using AutoRefundOtherSports.Exceptions;
+
+namespace AutoRefundOtherSports.Services;
 
 public interface RefundController
 {
@@ -13,21 +15,17 @@ public class RefundControllerImp : RefundController
 
     private readonly MatchPoolService matchPoolService;
 
-    private readonly LoggingService loggingService;
-
     private readonly SettleService settleService;
 
     public RefundControllerImp(
         MatchService matchService,
         VerificationService verificationService,
         MatchPoolService matchPoolService,
-        LoggingService loggingService,
         SettleService settleService)
     {
         this.matchService = matchService;
         this.verificationService = verificationService;
         this.matchPoolService = matchPoolService;
-        this.loggingService = loggingService;
         this.settleService = settleService;
     }
 

@@ -23,7 +23,7 @@ public class VerificationStatusServiceTests
     {
         var criteria = new CheckOddsCriteria();
         createQueryService.CreateQueryCheckOdds(Arg.Any<Match>()).Returns(criteria);
-        repository.When(fake => fake.ExecuteAsync(criteria)).Do(call =>
+        repository.When(fake => fake.ExecuteAsync(criteria)).Do(_ =>
         {
             criteria.ErrCode = 1;
         });

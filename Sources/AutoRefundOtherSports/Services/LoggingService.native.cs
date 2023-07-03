@@ -1,4 +1,5 @@
-﻿using Fanex.Logging;
+﻿using AutoRefundOtherSports.Exceptions;
+using Fanex.Logging;
 
 namespace AutoRefundOtherSports.Services;
 
@@ -11,6 +12,8 @@ public interface LoggingService
     Task Update(Match match, string remark, int status);
 
     void WriteLog(int matchId, string message);
+
+    void InsertResettleLog(SettleCriteria criteria, int sportType);
 }
 
 public class LoggingServiceImp : LoggingService
@@ -58,6 +61,20 @@ public class LoggingServiceImp : LoggingService
             };
 
         return string.Join("<br/>", remark);
+    }
+
+    public void InsertResettleLog(SettleCriteria criteria, int sportType)
+    {
+        try
+        {
+            var insertLogCriteria = new InsertLogCriteria(criteria, sportType);
+
+            repository.Execute(insertLogCriteria);
+        }
+        catch (Exception e)
+        {
+            LogService.Error("Fanex.AutoRefundOtherSports.Service(Write resettle Log): ", e);
+        }
     }
 
     public void WriteLog(int matchId, string message)

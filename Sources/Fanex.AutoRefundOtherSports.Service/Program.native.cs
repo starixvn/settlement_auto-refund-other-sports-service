@@ -1,5 +1,5 @@
 ﻿using AutoRefundOtherSports.Models;
-using Fanex.AutoRefundOtherSports;
+using Fanex.AutoRefundOtherSports.Service;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 

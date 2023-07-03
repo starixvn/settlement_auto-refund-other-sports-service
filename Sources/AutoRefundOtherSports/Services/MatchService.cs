@@ -1,4 +1,6 @@
-﻿namespace AutoRefundOtherSports.Services;
+﻿using AutoRefundOtherSports.Exceptions;
+
+namespace AutoRefundOtherSports.Services;
 
 public interface MatchService
 {

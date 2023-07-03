@@ -80,7 +80,7 @@ public class AutoRefundOtherSports : IHostedService
             if (!maintenanceService.IsMaintenance())
             {
                 MainProcess();
-                Thread.Sleep(int.Parse(configuration.GetSection("ServiceInterval").Value));
+                Thread.Sleep(int.Parse(configuration.GetSection("ServiceInterval").Value!));
             }
         }
     }
@@ -108,24 +108,24 @@ public class AutoRefundOtherSports : IHostedService
 
     private void HandleGarbageCollector()
     {
-        if (counter >= int.Parse(configuration.GetSection("GarbageCollectorInterval").Value))
+        if (counter >= int.Parse(configuration.GetSection("GarbageCollectorInterval").Value!))
         {
             counter = 0;
             GC.WaitForPendingFinalizers();
         }
 
-        counter += int.Parse(configuration.GetSection("ServiceInterval").Value);
+        counter += int.Parse(configuration.GetSection("ServiceInterval").Value!);
     }
 
     private void HandleMissedMatch()
     {
-        if (timeCounter >= int.Parse(configuration.GetSection("CheckMissedMatchInterval").Value))
+        if (timeCounter >= int.Parse(configuration.GetSection("CheckMissedMatchInterval").Value!))
         {
             timeCounter = 0;
             matchService.CheckMissedMatch();
         }
 
-        timeCounter += int.Parse(configuration.GetSection("ServiceInterval").Value);
+        timeCounter += int.Parse(configuration.GetSection("ServiceInterval").Value!);
     }
 
     private void StartUmSetting()

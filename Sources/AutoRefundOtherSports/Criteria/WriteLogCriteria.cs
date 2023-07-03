@@ -1,6 +1,4 @@
-﻿using Fanex.Data.Repository;
-
-namespace AutoRefundOtherSports.Criteria;
+﻿namespace AutoRefundOtherSports.Criteria;
 
 public class WriteLogCriteria : NonQueryCommand
 {
@@ -16,7 +14,7 @@ public class WriteLogCriteria : NonQueryCommand
 
     public string Remark { get; set; }
 
-    public string IP { get; } = string.Empty;
+    public string Ip { get; } = string.Empty;
 
     public int ActionId { get; } = 109;
 

@@ -57,6 +57,7 @@ public class SettleServiceImp : SettleService
 
             var message = GenerateLogMessage(criteria);
             loggingService.WriteLog(criteria.MatchId, message);
+            loggingService.InsertResettleLog(criteria, match.SportType);
 
             await ExecuteAsync(criteria);
             await SettleHedgeMatch(match, criteria);

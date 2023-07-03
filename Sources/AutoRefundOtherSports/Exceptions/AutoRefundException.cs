@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-namespace AutoRefundOtherSports;
+namespace AutoRefundOtherSports.Exceptions;
 
 [Serializable]
 public class AutoRefundException : Exception

@@ -17,7 +17,7 @@ public class VerificationServiceTests
             RetryCount = 5,
             RetryInterval = 300
         };
-        var options = Options.Create(appSettings);
+        Options.Create(appSettings);
         service = new VerificationServiceImp(retryValidationService);
     }
 

@@ -12,7 +12,7 @@ using ONEbook.UM.Configurations;
 using ONEbook.UM.Helpers;
 using ONEbook.UM.Transport;
 
-namespace Fanex.AutoRefundOtherSports;
+namespace Fanex.AutoRefundOtherSports.Service;
 
 public static class AutoRefundInjector
 {

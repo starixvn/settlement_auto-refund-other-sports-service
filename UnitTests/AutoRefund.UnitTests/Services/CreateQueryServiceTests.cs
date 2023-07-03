@@ -5,15 +5,13 @@ namespace AutoRefund.UnitTests.Services;
 
 public class CreateQueryServiceTests
 {
-    private readonly XmlConvertService xmlConvertService;
-
     private readonly CreateQueryService service;
 
     private readonly Match match;
 
     public CreateQueryServiceTests()
     {
-        xmlConvertService = new XmlConvertServiceImp();
+        XmlConvertService xmlConvertService = new XmlConvertServiceImp();
         service = new CreateQueryServiceImp(xmlConvertService);
         match = new Match()
         {
