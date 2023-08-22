@@ -1,4 +1,5 @@
-﻿using Fanex.Settlement.ScaleOut.Request;
+﻿using Fanex.Settlement.ScaleOut.Models;
+using Fanex.Settlement.ScaleOut.Request;
 using Fanex.Settlement.ScaleOut.Services;
 
 namespace AutoRefundOtherSports.Services;
@@ -40,7 +41,10 @@ public class SettleServiceImp : SettleService
     public async Task SettleMatch(Match match)
     {
         var criteria = createQueryService.QuerySettle(match);
-        var result = await ValidateBeforeExecute(criteria);
+
+        var result = match.IsExistsGameWinner
+            ? await ValidateBeforeExecuteForGameWinner(criteria)
+            : await ValidateBeforeExecute(criteria);
 
         if (result.ErrCode != ErrorCode.DeploymentError)
         {
@@ -81,6 +85,27 @@ public class SettleServiceImp : SettleService
             IsAuto = true
         };
         return await retryValidationService.ValidateEventTicket(request);
+    }
+
+    private async Task<Result> ValidateBeforeExecuteForGameWinner(SettleCriteria criteria)
+    {
+        var request = new EventTicketRequest
+        {
+            MatchId = criteria.MatchId,
+            Action = criteria.Action,
+            SpName = criteria.SpName,
+            Mode = "ALL",
+            SelectedResources = criteria.SelectedResources,
+            IsAuto = true
+        };
+
+        var resultMessage = await scaleOutSettleService.ValidateEventAndTicket(request);
+
+        return new Result
+        {
+            ErrCode = resultMessage.ErrorCode,
+            ErrMsg = resultMessage.ErrorMessage
+        };
     }
 
     private async Task UpdateMatchInfo(SettleCriteria criteria)

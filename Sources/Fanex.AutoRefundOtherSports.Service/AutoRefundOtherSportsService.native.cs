@@ -75,14 +75,14 @@ public class AutoRefundOtherSports : IHostedService
 
     private void RefundThreadProcess()
     {
-        while (running)
+        //while (running)
+        //{
+        if (!maintenanceService.IsMaintenance())
         {
-            if (!maintenanceService.IsMaintenance())
-            {
-                MainProcess();
-                Thread.Sleep(int.Parse(configuration.GetSection("ServiceInterval").Value!));
-            }
+            MainProcess();
+            Thread.Sleep(int.Parse(configuration.GetSection("ServiceInterval").Value!));
         }
+        //}
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

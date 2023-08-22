@@ -21,4 +21,7 @@ public class ResultDetail
 
     [XmlIgnore]
     public byte TypeId { get; set; }
+
+    [XmlIgnore]
+    public string SourceId { get; set; }
 }
