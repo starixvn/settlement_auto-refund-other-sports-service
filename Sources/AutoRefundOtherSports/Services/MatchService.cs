@@ -68,12 +68,14 @@ public class MatchServiceImp : MatchService
 
     private static List<Match> GroupMatch(IEnumerable<ResultDetail> resultDetails)
     {
-        var matches = resultDetails.GroupBy(result => new { result.MatchId, result.LeagueId, result.TypeId })
+        var matches = resultDetails.GroupBy(result => new { result.MatchId, result.LeagueId, result.TypeId, result.SportType, result.ParentId })
             .Select(match => new Match
             {
                 MatchId = match.Key.MatchId,
                 LeagueId = match.Key.LeagueId,
                 TypeId = match.Key.TypeId,
+                SportType = match.Key.SportType,
+                ParentId = match.Key.ParentId,
                 ResultDetails = match.ToList()
             }).ToList();
 

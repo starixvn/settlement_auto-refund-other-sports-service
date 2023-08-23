@@ -65,12 +65,32 @@ public class SettleServiceImp : SettleService
 
             await ExecuteAsync(criteria);
             await SettleHedgeMatch(match, criteria);
+
+            await HandleRefundGameWinner(match, result);
         }
         else
         {
             await loggingService.WriteLog(match, result.ErrMsg);
             await loggingService.Update(match, result.ErrMsg, MatchStatus.Failed);
         }
+    }
+
+    private async Task HandleRefundGameWinner(Match match, Result result)
+    {
+        if (result.ErrCode == 0 && match.SportType == SportType.Tennis && match.ParentId == 0)
+        {
+            await InsRefundResultOS(match.MatchId);
+        }
+    }
+
+    private async Task InsRefundResultOS(int matchId)
+    {
+        var criteria = new InsRefundResultOSCriteria
+        {
+            MatchId = matchId
+        };
+
+        await repository.ExecuteAsync(criteria);
     }
 
     private async Task<Result> ValidateBeforeExecute(SettleCriteria criteria)

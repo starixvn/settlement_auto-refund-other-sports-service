@@ -24,4 +24,10 @@ public class ResultDetail
 
     [XmlIgnore]
     public string SourceId { get; set; }
+
+    [XmlIgnore]
+    public int ParentId { get; set; }
+
+    [XmlIgnore]
+    public int SportType { get; set; }
 }

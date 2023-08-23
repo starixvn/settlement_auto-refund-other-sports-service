@@ -12,6 +12,8 @@ public class Match
 
     public int SportType { get; set; }
 
+    public int ParentId { get; set; }
+
     public List<ResultDetail> ResultDetails { get; set; }
     public int TryCount { get; set; }
 
