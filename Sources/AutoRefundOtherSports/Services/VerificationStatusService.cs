@@ -1,10 +1,14 @@
-﻿namespace AutoRefundOtherSports.Services;
+﻿using AutoRefundOtherSports.Models;
+
+namespace AutoRefundOtherSports.Services;
 
 public interface VerificationStatusService
 {
     Task<CheckOddsCriteria> CheckRunningOdds(Match match);
 
     Task<bool> IsExistMarkedTicket(Match match);
+
+    Task<bool> IsTicketExisting(Match match);
 }
 
 public class VerificationStatusServiceImp : VerificationStatusService
@@ -50,6 +54,35 @@ public class VerificationStatusServiceImp : VerificationStatusService
             {
                 return criteria.IsExistMarkedTicket;
             }
+        }
+
+        return false;
+    }
+
+    public async Task<bool> IsTicketExisting(Match match)
+    {
+        var criteria = new CheckMatchTicketCriteria
+        {
+            MatchId = match.MatchId,
+        };
+        try
+        {
+            foreach (var server in appSettingsKey.SiteDbServer)
+            {
+                criteria.DbServer = server;
+
+                var result = await repository.GetAsync<TicketCheck>(criteria);
+
+                if (result.IsExistTicket)
+                {
+                    return TicketStatus.Exists;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
         }
 
         return false;

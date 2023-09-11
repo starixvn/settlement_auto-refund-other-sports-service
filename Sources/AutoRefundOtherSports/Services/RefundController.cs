@@ -55,16 +55,28 @@ public class RefundControllerImp : RefundController
     {
         if (match.IsExistsGameWinner)
         {
-            var isExistMarkedTicket = await verificationStatusService.IsExistMarkedTicket(match);
-
-            if (isExistMarkedTicket)
-            {
-                throw new ChildMatchMarkedTicketException();
-            }
+            await VerifyResultForGameWinner(match);
             return;
         }
 
         verificationService.VerifyResultRunning(match);
         await verificationService.VerifyResultStatus(match);
+    }
+
+    private async Task VerifyResultForGameWinner(Match match)
+    {
+        var isExistMarkedTicket = await verificationStatusService.IsExistMarkedTicket(match);
+
+        if (isExistMarkedTicket)
+        {
+            throw new ChildMatchMarkedTicketException();
+        }
+
+        var isExistTicket = await verificationStatusService.IsTicketExisting(match);
+
+        if (!isExistTicket)
+        {
+            throw new MatchNoTicketException();
+        }
     }
 }
