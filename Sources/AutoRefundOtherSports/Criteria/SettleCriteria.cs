@@ -13,6 +13,7 @@ public class SettleCriteria : NonQueryCommand
     public string Action { get; } = "REFUND";
 
     public bool IsAuto { get; } = true;
+    public short? AutoType { get; set; }
 
     public string BroadcastSessionId { get; set; }
 
