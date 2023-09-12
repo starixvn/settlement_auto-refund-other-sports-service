@@ -65,24 +65,17 @@ public class VerificationStatusServiceImp : VerificationStatusService
         {
             MatchId = match.MatchId,
         };
-        try
+
+        foreach (var server in appSettingsKey.SiteDbServer)
         {
-            foreach (var server in appSettingsKey.SiteDbServer)
+            criteria.DbServer = server;
+
+            var result = await repository.GetAsync<TicketCheck>(criteria) ?? new TicketCheck();
+
+            if (result.IsExistTicket)
             {
-                criteria.DbServer = server;
-
-                var result = await repository.GetAsync<TicketCheck>(criteria);
-
-                if (result.IsExistTicket)
-                {
-                    return TicketStatus.Exists;
-                }
+                return TicketStatus.Exists;
             }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
         }
 
         return false;
