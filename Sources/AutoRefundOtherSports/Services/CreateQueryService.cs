@@ -25,7 +25,8 @@ public class CreateQueryServiceImp : CreateQueryService
         {
             MatchId = match.MatchId,
             SelectedResources = resourcesResult,
-            BroadcastSessionId = Guid.NewGuid().ToString()
+            BroadcastSessionId = Guid.NewGuid().ToString(),
+            AutoType = match.IsExistsGameWinner ? AutoType.RefundGameWinner : null
         };
 
         return criteria;

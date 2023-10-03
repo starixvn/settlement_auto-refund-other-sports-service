@@ -1,4 +1,6 @@
-﻿namespace AutoRefundOtherSports.Models;
+﻿using System.Text.RegularExpressions;
+
+namespace AutoRefundOtherSports.Models;
 
 public class Match
 {
@@ -10,19 +12,16 @@ public class Match
 
     public int SportType { get; set; }
 
-    public List<ResultDetail> ResultDetails { get; set; }
+    public int ParentId { get; set; }
 
+    public List<ResultDetail> ResultDetails { get; set; }
     public int TryCount { get; set; }
 
-    public override bool Equals(object obj)
-    {
-        return obj != null
-               && (obj is Match)
-               && (obj as Match).MatchId == MatchId;
-    }
+    public bool IsExistsGameWinner => ResultDetails.Exists(x => x.SourceId == SourceIds.TennisGameWinner);
 
-    public override int GetHashCode()
-    {
-        return MatchId;
-    }
+    public override bool Equals(object obj) =>
+        obj is Match match
+        && match.MatchId == MatchId;
+
+    public override int GetHashCode() => MatchId;
 }

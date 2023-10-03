@@ -1,4 +1,5 @@
 ﻿using AutoRefundOtherSports.Exceptions;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace AutoRefundOtherSports.Services;
 
@@ -13,6 +14,8 @@ public class RefundControllerImp : RefundController
 
     private readonly VerificationService verificationService;
 
+    private readonly VerificationStatusService verificationStatusService;
+
     private readonly MatchPoolService matchPoolService;
 
     private readonly SettleService settleService;
@@ -21,20 +24,21 @@ public class RefundControllerImp : RefundController
         MatchService matchService,
         VerificationService verificationService,
         MatchPoolService matchPoolService,
-        SettleService settleService)
+        SettleService settleService,
+        VerificationStatusService verificationStatusService)
     {
         this.matchService = matchService;
         this.verificationService = verificationService;
         this.matchPoolService = matchPoolService;
         this.settleService = settleService;
+        this.verificationStatusService = verificationStatusService;
     }
 
     public async Task Process(Match match)
     {
         try
         {
-            verificationService.VerifyResultRunning(match);
-            await verificationService.VerifyResultStatus(match);
+            await VerifyResult(match);
             await settleService.SettleMatch(match);
         }
         catch (AutoRefundException exception)
@@ -44,6 +48,35 @@ public class RefundControllerImp : RefundController
         finally
         {
             matchPoolService.RemoveMatch(match);
+        }
+    }
+
+    private async Task VerifyResult(Match match)
+    {
+        if (match.IsExistsGameWinner)
+        {
+            await VerifyResultForGameWinner(match);
+            return;
+        }
+
+        verificationService.VerifyResultRunning(match);
+        await verificationService.VerifyResultStatus(match);
+    }
+
+    private async Task VerifyResultForGameWinner(Match match)
+    {
+        var isExistMarkedTicket = await verificationStatusService.IsExistMarkedTicket(match);
+
+        if (isExistMarkedTicket)
+        {
+            throw new ChildMatchMarkedTicketException();
+        }
+
+        var isExistTicket = await verificationStatusService.IsTicketExisting(match);
+
+        if (!isExistTicket)
+        {
+            throw new MatchNoTicketException();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Fanex.Settlement.ScaleOut.Request;
+﻿using Fanex.Settlement.ScaleOut.Models;
+using Fanex.Settlement.ScaleOut.Request;
 using Fanex.Settlement.ScaleOut.Services;
 
 namespace AutoRefundOtherSports.Services;
@@ -40,7 +41,10 @@ public class SettleServiceImp : SettleService
     public async Task SettleMatch(Match match)
     {
         var criteria = createQueryService.QuerySettle(match);
-        var result = await ValidateBeforeExecute(criteria);
+
+        var result = match.IsExistsGameWinner
+            ? await ValidateBeforeExecuteForGameWinner(criteria)
+            : await ValidateBeforeExecute(criteria);
 
         if (result.ErrCode != ErrorCode.DeploymentError)
         {
@@ -61,12 +65,32 @@ public class SettleServiceImp : SettleService
 
             await ExecuteAsync(criteria);
             await SettleHedgeMatch(match, criteria);
+
+            await HandleRefundGameWinner(match, result);
         }
         else
         {
             await loggingService.WriteLog(match, result.ErrMsg);
             await loggingService.Update(match, result.ErrMsg, MatchStatus.Failed);
         }
+    }
+
+    private async Task HandleRefundGameWinner(Match match, Result result)
+    {
+        if (result.ErrCode == 0 && match.SportType == SportType.Tennis && match.ParentId == 0)
+        {
+            await InsRefundResultOS(match.MatchId);
+        }
+    }
+
+    private async Task InsRefundResultOS(int matchId)
+    {
+        var criteria = new InsRefundResultOSCriteria
+        {
+            MatchId = matchId
+        };
+
+        await repository.ExecuteAsync(criteria);
     }
 
     private async Task<Result> ValidateBeforeExecute(SettleCriteria criteria)
@@ -81,6 +105,27 @@ public class SettleServiceImp : SettleService
             IsAuto = true
         };
         return await retryValidationService.ValidateEventTicket(request);
+    }
+
+    private async Task<Result> ValidateBeforeExecuteForGameWinner(SettleCriteria criteria)
+    {
+        var request = new EventTicketRequest
+        {
+            MatchId = criteria.MatchId,
+            Action = criteria.Action,
+            SpName = criteria.SpName,
+            Mode = "ALL",
+            SelectedResources = criteria.SelectedResources,
+            IsAuto = true
+        };
+
+        var resultMessage = await scaleOutSettleService.ValidateEventAndTicket(request);
+
+        return new Result
+        {
+            ErrCode = resultMessage.ErrorCode,
+            ErrMsg = resultMessage.ErrorMessage
+        };
     }
 
     private async Task UpdateMatchInfo(SettleCriteria criteria)

@@ -20,11 +20,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseRouting();
 
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapGet("/",
-        async context => { await context.Response.WriteAsync("Fanex.AutoRefundOS.Service"); });
-});
+app.MapGet("/",
+    async context => { await context.Response.WriteAsync("Fanex.AutoRefundOS.Service"); });
 
 #if DEBUG
 app.Run();
