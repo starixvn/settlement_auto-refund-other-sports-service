@@ -1,6 +1,4 @@
-﻿using AutoRefundOtherSports.Models;
-
-namespace AutoRefundOtherSports.Services;
+﻿namespace AutoRefundOtherSports.Services;
 
 public interface VerificationStatusService
 {

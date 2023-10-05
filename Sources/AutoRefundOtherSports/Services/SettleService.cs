@@ -1,5 +1,4 @@
-﻿using Fanex.Settlement.ScaleOut.Models;
-using Fanex.Settlement.ScaleOut.Request;
+﻿using Fanex.Settlement.ScaleOut.Request;
 using Fanex.Settlement.ScaleOut.Services;
 
 namespace AutoRefundOtherSports.Services;

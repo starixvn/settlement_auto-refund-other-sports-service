@@ -1,6 +1,4 @@
-﻿using System.Text.RegularExpressions;
-
-namespace AutoRefundOtherSports.Models;
+﻿namespace AutoRefundOtherSports.Models;
 
 public class Match
 {

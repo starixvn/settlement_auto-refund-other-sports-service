@@ -1,5 +1,4 @@
 ﻿using AutoRefundOtherSports.Exceptions;
-using AutoRefundOtherSports.Services;
 
 namespace AutoRefund.UnitTests.Services;
 
@@ -14,7 +13,6 @@ public class RefundControllerTests
     private readonly SettleService settleService;
 
     private readonly RefundController controller;
-    private readonly VerificationStatusService verificationStatusService;
 
     public RefundControllerTests()
     {
@@ -22,7 +20,7 @@ public class RefundControllerTests
         verificationService = Substitute.For<VerificationService>();
         matchService = Substitute.For<MatchService>();
         settleService = Substitute.For<SettleService>();
-        verificationStatusService = Substitute.For<VerificationStatusService>();
+        var verificationStatusService = Substitute.For<VerificationStatusService>();
 
         controller = new RefundControllerImp(matchService, verificationService, matchPoolService, settleService, verificationStatusService);
     }
