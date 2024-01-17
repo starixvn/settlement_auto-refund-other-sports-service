@@ -16,18 +16,9 @@ builder.Services.AddHostedService<Fanex.AutoRefundOtherSports.Service.AutoRefund
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+app.Run(async context =>
 {
-    app.UseDeveloperExceptionPage();
-}
+    await context.Response.WriteAsync("OK");
+});
 
-app.UseRouting();
-
-app.MapGet("/",
-    async context => { await context.Response.WriteAsync("Fanex.AutoRefundOS.Service"); });
-
-#if DEBUG
 app.Run();
-#else
-await app.RunAsync("http://0.0.0.0:5000");
-#endif

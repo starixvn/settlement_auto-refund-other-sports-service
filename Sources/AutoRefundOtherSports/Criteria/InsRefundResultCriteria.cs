@@ -1,6 +1,6 @@
 ﻿namespace AutoRefundOtherSports.Criteria;
 
-public class InsRefundResultOSCriteria : INonQueryCommand
+public class InsRefundResultCriteria : INonQueryCommand
 {
     public int MatchId { get; set; }
 

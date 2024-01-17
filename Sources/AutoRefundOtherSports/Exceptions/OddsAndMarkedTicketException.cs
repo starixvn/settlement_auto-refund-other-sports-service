@@ -20,6 +20,7 @@ public class OddsAndMarkedTicketException : AutoRefundException
     {
     }
 
+    [Obsolete(DiagnosticId = "SYSLIB0051")]
     protected OddsAndMarkedTicketException(SerializationInfo info, StreamingContext context)
         : base(info, context)
     {

@@ -78,13 +78,13 @@ public class SettleServiceImp : SettleService
     {
         if (result.ErrCode == 0 && match.SportType == SportType.Tennis && match.ParentId == 0)
         {
-            await InsRefundResultOS(match.MatchId);
+            await InsRefundResult(match.MatchId);
         }
     }
 
-    private async Task InsRefundResultOS(int matchId)
+    private async Task InsRefundResult(int matchId)
     {
-        var criteria = new InsRefundResultOSCriteria
+        var criteria = new InsRefundResultCriteria
         {
             MatchId = matchId
         };

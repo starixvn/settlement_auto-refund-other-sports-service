@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31402.337
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34316.72
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fanex.AutoRefundOtherSports.Service", "Sources\Fanex.AutoRefundOtherSports.Service\Fanex.AutoRefundOtherSports.Service.csproj", "{36A84280-4A12-4D7C-AE13-262AE3AD7104}"
 EndProject
@@ -11,7 +11,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoRefundOtherSports", "So
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnitTests", "UnitTests", "{AC24F392-4138-4E83-94C8-171C9B983AD0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoRefund.UnitTests", "UnitTests\AutoRefund.UnitTests\AutoRefund.UnitTests.csproj", "{B5BBF4C2-BC22-497C-A287-B58C1E8A2471}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoRefund.UnitTests", "UnitTests\AutoRefund.UnitTests\AutoRefund.UnitTests.csproj", "{B5BBF4C2-BC22-497C-A287-B58C1E8A2471}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0ADA4575-388B-4FDB-AA2D-5213876B0678}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		.gitlab-ci.yml = .gitlab-ci.yml
+		Dockerfile = Dockerfile
+		Fanex.AutoRefundOtherSports.Service.sln.DotSettings = Fanex.AutoRefundOtherSports.Service.sln.DotSettings
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

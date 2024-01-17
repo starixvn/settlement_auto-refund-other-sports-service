@@ -20,6 +20,7 @@ public class SettledException : AutoRefundException
     {
     }
 
+    [Obsolete(DiagnosticId = "SYSLIB0051")]
     protected SettledException(SerializationInfo info, StreamingContext context)
         : base(info, context)
     {

@@ -20,6 +20,7 @@ public class MarkedResultException : AutoRefundException
     {
     }
 
+    [Obsolete(DiagnosticId = "SYSLIB0051")]
     protected MarkedResultException(SerializationInfo info, StreamingContext context)
         : base(info, context)
     {
