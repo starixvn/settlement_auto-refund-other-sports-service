@@ -1,5 +1,4 @@
-﻿using System;
-using AutoRefundOtherSports.Services;
+﻿using AutoRefundOtherSports.Services;
 using Fanex.Caching;
 using Fanex.Logging;
 using Fanex.Logging.Extensions;
