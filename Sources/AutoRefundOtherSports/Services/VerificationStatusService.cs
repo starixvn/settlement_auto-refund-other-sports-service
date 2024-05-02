@@ -6,7 +6,7 @@ public interface VerificationStatusService
 
     Task<bool> IsExistMarkedTicket(Match match);
 
-    Task<bool> IsTicketExisting(Match match);
+    Task<(bool, bool)> IsTicketExisting(Match match);
 }
 
 public class VerificationStatusServiceImp : VerificationStatusService
@@ -57,25 +57,27 @@ public class VerificationStatusServiceImp : VerificationStatusService
         return false;
     }
 
-    public async Task<bool> IsTicketExisting(Match match)
+    public async Task<(bool, bool)> IsTicketExisting(Match match)
     {
         var criteria = new CheckMatchTicketCriteria
         {
-            MatchId = match.MatchId,
+            MatchId = match.MatchId
         };
 
-        foreach (var server in appSettingsKey.SiteDbServer)
-        {
-            criteria.DbServer = server;
+        var tasks = appSettingsKey.SiteDbServer.Select(s => GetTicketInfo(s, criteria));
 
-            var result = await repository.GetAsync<TicketCheck>(criteria) ?? new TicketCheck();
+        var ticketInfos = await Task.WhenAll(tasks.ToArray());
 
-            if (result.IsExistTicket)
-            {
-                return TicketStatus.Exists;
-            }
-        }
 
-        return false;
+        var isExistTicket = ticketInfos.Any(ticketInfo => ticketInfo.IsExistTicket);
+        var isExistTicketSettled = ticketInfos.Any(ticketInfo => ticketInfo.IsExistSettledTicket);
+
+        return (isExistTicket, isExistTicketSettled);
+    }
+
+    private async Task<TicketCheck> GetTicketInfo(string server, CheckMatchTicketCriteria criteria)
+    {
+        criteria.DbServer = server;
+        return await repository.GetAsync<TicketCheck>(criteria);
     }
 }
