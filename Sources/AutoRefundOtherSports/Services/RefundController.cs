@@ -71,11 +71,16 @@ public class RefundControllerImp : RefundController
             throw new ChildMatchMarkedTicketException();
         }
 
-        var isExistTicket = await verificationStatusService.IsTicketExisting(match);
+        var (isExistTicket, isExistTicketSettled) = await verificationStatusService.IsTicketExisting(match);
 
         if (!isExistTicket)
         {
             throw new MatchNoTicketException();
+        }
+
+        if (isExistTicketSettled)
+        {
+            throw new ChildMatchExistSettledTicket();
         }
     }
 }

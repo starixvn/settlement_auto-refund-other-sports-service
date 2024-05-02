@@ -4,6 +4,6 @@ public class MatchNoTicketException : AutoRefundException
 {
     public MatchNoTicketException()
     {
-        Description = "Auto refund failed: the match has no ticket.";
+        Description = "Auto refund child match failed: the match has no ticket.";
     }
 }

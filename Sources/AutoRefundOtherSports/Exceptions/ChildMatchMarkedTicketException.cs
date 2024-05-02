@@ -4,6 +4,6 @@ public class ChildMatchMarkedTicketException : AutoRefundException
 {
     public ChildMatchMarkedTicketException()
     {
-        Description = "auto refund failed: marked tickets exist.";
+        Description = "Auto refund child match failed: marked tickets exist.";
     }
 }
