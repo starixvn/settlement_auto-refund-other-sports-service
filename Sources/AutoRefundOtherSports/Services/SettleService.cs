@@ -78,15 +78,16 @@ public class SettleServiceImp : SettleService
     {
         if (result.ErrCode == 0 && match.SportType == SportType.Tennis && match.ParentId == 0)
         {
-            await InsRefundResult(match.MatchId);
+            await InsRefundResult(match);
         }
     }
 
-    private async Task InsRefundResult(int matchId)
+    private async Task InsRefundResult(Match match)
     {
         var criteria = new InsRefundResultCriteria
         {
-            MatchId = matchId
+            MatchId = match.MatchId,
+            ResourceIds = string.Join(',', match.ResultDetails.Select(r => r.ResourceId))
         };
 
         await repository.ExecuteAsync(criteria);
