@@ -21,7 +21,7 @@ public class MatchServiceImp : MatchService
 
     private readonly LoggingService loggingService;
 
-    private readonly List<int> listSport = new() { SportType.Volleyball, SportType.Badminton, SportType.Tennis, SportType.ESports };
+    private readonly List<int> listSport = new() { SportType.Volleyball, SportType.Badminton, SportType.Tennis, SportType.ESports, SportType.TableTennis };
 
     public MatchServiceImp(IDynamicRepository repository,
         ICache cache,

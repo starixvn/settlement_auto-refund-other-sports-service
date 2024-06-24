@@ -87,7 +87,7 @@ public class SettleServiceImp : SettleService
         var criteria = new InsRefundResultCriteria
         {
             MatchId = match.MatchId,
-            ResourceIds = string.Join(',', match.ResultDetails.Select(r => r.ResourceId))
+            ResourceIds = string.Join(',', match.ResultDetails.Select(r => r.ResourceId).Distinct())
         };
 
         await repository.ExecuteAsync(criteria);
