@@ -55,6 +55,7 @@ public class CreateQueryServiceImp : CreateQueryService
         };
     }
 
+
     public CheckOddsCriteria CreateQueryCheckOdds(Match match)
     {
         return new CheckOddsCriteria
