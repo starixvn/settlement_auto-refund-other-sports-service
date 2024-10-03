@@ -53,7 +53,7 @@ public class MatchServiceImp : MatchService
         };
     }
 
-    public async Task<IEnumerable<ResultDetail>> GetResultDetail()
+    private async Task<IEnumerable<ResultDetail>> GetResultDetail()
     {
         var resultDetails = new List<ResultDetail>();
 
