@@ -11,6 +11,8 @@ public interface LoggingService
 
     Task Update(Match match, string remark, int status);
 
+    Task UpdateMatchStatus(UpdateResultStatusCriteria criteria);
+
     void WriteLog(int matchId, string message);
 
     void InsertResettleLog(SettleCriteria criteria, int sportType);
@@ -47,6 +49,12 @@ public class LoggingServiceImp : LoggingService
     {
         var criteria = createQueryService.QueryUpdateResult(match, remark, status);
 
+        await repository.ExecuteAsync(criteria);
+    }
+
+
+    public async Task UpdateMatchStatus(UpdateResultStatusCriteria criteria)
+    {
         await repository.ExecuteAsync(criteria);
     }
 

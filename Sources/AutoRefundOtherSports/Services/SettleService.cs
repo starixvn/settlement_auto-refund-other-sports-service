@@ -63,6 +63,8 @@ public class SettleServiceImp : SettleService
             loggingService.InsertResettleLog(criteria, match.SportType);
 
             await ExecuteAsync(criteria);
+            await loggingService.Update(match, string.Empty, MatchStatus.Completed);
+           
             await SettleHedgeMatch(match, criteria);
 
             await HandleRefundGameWinner(match, result);
@@ -147,11 +149,15 @@ public class SettleServiceImp : SettleService
 
     private async Task ExecuteAsync(SettleCriteria criteria)
     {
-        foreach (var server in appSettingsKey.SiteDbServer)
-        {
-            criteria.DbServer = server;
-            await repository.ExecuteAsync(criteria);
-        }
+        var servers = appSettingsKey.SiteDbServer;
+        var tasks = servers.Select(server => ExecuteOneServer(criteria, server)).ToList();
+        await Task.WhenAll(tasks);
+    }
+
+    private async Task ExecuteOneServer(SettleCriteria criteria, string server)
+    {
+        criteria.DbServer = server;
+        await repository.ExecuteAsync(criteria);
     }
 
     private async Task SettleHedgeMatch(Match match, SettleCriteria criteria)
@@ -162,7 +168,16 @@ public class SettleServiceImp : SettleService
             criteria.MatchId = hedgeMatch.MatchId;
             criteria.BroadcastSessionId = Guid.NewGuid().ToString();
             await UpdateMatchInfo(criteria);
+           
             await ExecuteAsync(criteria);
+
+            await loggingService.UpdateMatchStatus(new UpdateResultStatusCriteria
+            {
+                MatchId = hedgeMatch.MatchId,
+                StatusId = MatchStatus.Completed,
+                TypeId = match.TypeId,
+                ResourceIds = string.Join(",", match.ResultDetails.Select(item => item.ResourceId).ToList()),
+            });
         }
     }
 
