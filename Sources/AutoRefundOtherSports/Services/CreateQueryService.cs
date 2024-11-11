@@ -9,15 +9,8 @@ public interface CreateQueryService
     CheckOddsCriteria CreateQueryCheckOdds(Match match);
 }
 
-public class CreateQueryServiceImp : CreateQueryService
+public class CreateQueryServiceImp(XmlConvertService xmlConvertService) : CreateQueryService
 {
-    private readonly XmlConvertService xmlConvertService;
-
-    public CreateQueryServiceImp(XmlConvertService xmlConvertService)
-    {
-        this.xmlConvertService = xmlConvertService;
-    }
-
     public SettleCriteria QuerySettle(Match match)
     {
         var resourcesResult = CreateResources(match.ResultDetails);
@@ -54,7 +47,6 @@ public class CreateQueryServiceImp : CreateQueryService
             TryCount = match.TryCount
         };
     }
-
 
     public CheckOddsCriteria CreateQueryCheckOdds(Match match)
     {

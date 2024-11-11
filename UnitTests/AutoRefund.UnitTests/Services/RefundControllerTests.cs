@@ -1,4 +1,5 @@
-﻿using AutoRefundOtherSports.Exceptions;
+﻿using AutoRefundOtherSports.Constants;
+using AutoRefundOtherSports.Exceptions;
 
 namespace AutoRefund.UnitTests.Services;
 
@@ -12,7 +13,7 @@ public class RefundControllerTests
 
     private readonly SettleService settleService;
 
-    private readonly RefundController controller;
+    private readonly RefundControllerImp controller;
 
     public RefundControllerTests()
     {
@@ -20,28 +21,70 @@ public class RefundControllerTests
         verificationService = Substitute.For<VerificationService>();
         matchService = Substitute.For<MatchService>();
         settleService = Substitute.For<SettleService>();
-        var verificationStatusService = Substitute.For<VerificationStatusService>();
 
-        controller = new RefundControllerImp(matchService, verificationService, matchPoolService, settleService, verificationStatusService);
+        controller = new RefundControllerImp(matchService, verificationService, matchPoolService, settleService);
     }
 
     [Fact]
-    public async Task Process_PassedValidated_SettleMatch()
+    public async Task Process_ExistedGameWinnerAndPassedValidated_SettleMatch()
     {
-        var match = new Match();
+        var match = new Match
+        {
+            ResultDetails =
+            [
+                new ResultDetail()
+                {
+                    SourceId = SourceIds.TennisGameWinner
+                }
+            ]
+        };
 
         await controller.Process(match);
 
-        await settleService.Received().SettleMatch(match);
+        Received.InOrder(() =>
+        {
+            verificationService.VerifyResultForGameWinner(Arg.Any<Match>());
+            verificationService.VerifyResultRunning(Arg.Any<Match>());
+            verificationService.VerifyResultStatus(Arg.Any<Match>());
+            settleService.SettleMatch(Arg.Any<Match>());
+            matchPoolService.RemoveMatch(Arg.Any<Match>());
+        });
+
         await matchService.DidNotReceive().HandleAutoRefundException(Arg.Any<Match>(), Arg.Any<AutoRefundException>());
-        matchPoolService.Received().RemoveMatch(match);
+        await matchService.DidNotReceive().HandleAutoRefundException(Arg.Any<Match>(), Arg.Any<AutoRefundException>());
+    }
+
+    [Fact]
+    public async Task Process_NotExistedGameWinnerAndPassedValidated_SettleMatch()
+    {
+        var match = new Match
+        {
+            ResultDetails = []
+        };
+
+        await controller.Process(match);
+
+        Received.InOrder(() =>
+        {
+            verificationService.VerifyResultRunning(Arg.Any<Match>());
+            verificationService.VerifyResultStatus(Arg.Any<Match>());
+            settleService.SettleMatch(Arg.Any<Match>());
+            matchPoolService.RemoveMatch(Arg.Any<Match>());
+        });
+
+        await verificationService.DidNotReceive().VerifyResultForGameWinner(Arg.Any<Match>());
+        await matchService.DidNotReceive().HandleAutoRefundException(Arg.Any<Match>(), Arg.Any<AutoRefundException>());
+        await matchService.DidNotReceive().HandleAutoRefundException(Arg.Any<Match>(), Arg.Any<AutoRefundException>());
     }
 
     [Fact]
     public async Task Process_ThrowException_InvokeRelatedMethodsAndStopLoop()
     {
-        var match = new Match();
-        verificationService.When(fake => fake.VerifyResultRunning(match)).Do(_ => { throw new AutoRefundException(); });
+        var match = new Match
+        {
+            ResultDetails = []
+        };
+        verificationService.When(fake => fake.VerifyResultRunning(match)).Do(_ => throw new AutoRefundException());
 
         await controller.Process(match);
 

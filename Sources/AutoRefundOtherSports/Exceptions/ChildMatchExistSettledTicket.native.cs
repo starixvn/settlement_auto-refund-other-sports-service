@@ -1,5 +1,6 @@
 ﻿namespace AutoRefundOtherSports.Exceptions;
-internal class ChildMatchExistSettledTicket : AutoRefundException
+
+public class ChildMatchExistSettledTicket : AutoRefundException
 {
     public ChildMatchExistSettledTicket()
     {

@@ -18,18 +18,9 @@ public interface LoggingService
     void InsertResettleLog(SettleCriteria criteria, int sportType);
 }
 
-public class LoggingServiceImp : LoggingService
+public class LoggingServiceImp(IDynamicRepository repository, CreateQueryService createQueryService)
+    : LoggingService
 {
-    private readonly IDynamicRepository repository;
-
-    private readonly CreateQueryService createQueryService;
-
-    public LoggingServiceImp(IDynamicRepository repository, CreateQueryService createQueryService)
-    {
-        this.repository = repository;
-        this.createQueryService = createQueryService;
-    }
-
     public async Task WriteLog(Match match, string message)
     {
         var errorMessage = GenerateErrorLogMessage(match, message);
@@ -51,7 +42,6 @@ public class LoggingServiceImp : LoggingService
 
         await repository.ExecuteAsync(criteria);
     }
-
 
     public async Task UpdateMatchStatus(UpdateResultStatusCriteria criteria)
     {

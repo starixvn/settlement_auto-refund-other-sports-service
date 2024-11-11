@@ -1,4 +1,5 @@
 ﻿using AutoRefundOtherSports.Constants;
+using Fanex.Settlement.ScaleOut.Models;
 using Fanex.Settlement.ScaleOut.Request;
 using Fanex.Settlement.ScaleOut.Services;
 using Microsoft.Extensions.Options;
@@ -17,7 +18,7 @@ public class SettleServiceTests
 
     private readonly LoggingService loggingService;
 
-    private readonly SettleService service;
+    private readonly SettleServiceImp service;
 
     public SettleServiceTests()
     {
@@ -30,7 +31,7 @@ public class SettleServiceTests
         {
             RetryValidateCount = 4,
             RetryValidate = 1000,
-            SiteDbServer = new List<string> { "01", "02" }
+            SiteDbServer = ["01", "02"]
         };
         var appSettings = Options.Create(appSetting);
         service = new SettleServiceImp(createQueryService, repository, scaleOutSettleService, retryValidationService, loggingService, appSettings);
@@ -39,14 +40,26 @@ public class SettleServiceTests
     [Fact]
     public async Task SettleMatch_ExistError_WriteLogAndUpdateFail()
     {
-        createQueryService.QuerySettle(Arg.Any<Match>()).Returns(new SettleCriteria());
-        retryValidationService.ValidateEventTicket(Arg.Any<EventTicketRequest>()).Returns(new Result { ErrMsg = "test", ErrCode = 1 });
+        var match = new Match
+        {
+            ResultDetails =
+            [
+                new ResultDetail()
+                {
+                    SourceId = SourceIds.TennisGameWinner
+                }
+            ]
+        };
 
-        await service.SettleMatch(new Match());
+        createQueryService.QuerySettle(Arg.Any<Match>()).Returns(new SettleCriteria());
+        scaleOutSettleService.ValidateEventAndTicket(Arg.Any<EventTicketRequest>()).Returns(new ResultMessage { ErrorMessage = "test", ErrorCode = 1 });
+
+        await service.SettleMatch(match);
 
         await loggingService.DidNotReceive().Update(Arg.Any<Match>(), "", MatchStatus.Running);
         await scaleOutSettleService.DidNotReceive().UpdateMatchInfo(Arg.Any<UpdateMatchInfoRequest>());
         await repository.DidNotReceive().ExecuteAsync(Arg.Any<SettleCriteria>());
+
         await loggingService.Received().WriteLog(Arg.Any<Match>(), "test");
         await loggingService.Received().Update(Arg.Any<Match>(), "test", MatchStatus.Failed);
     }
@@ -54,10 +67,15 @@ public class SettleServiceTests
     [Fact]
     public async Task SettleMatch_PassedValidate_UpdateAndSettleMatch()
     {
+        var match = new Match
+        {
+            ResultDetails = []
+        };
+
         createQueryService.QuerySettle(Arg.Any<Match>()).Returns(new SettleCriteria());
         retryValidationService.ValidateEventTicket(Arg.Any<EventTicketRequest>()).Returns(new Result());
 
-        await service.SettleMatch(new Match());
+        await service.SettleMatch(match);
 
         await loggingService.Received().Update(Arg.Any<Match>(), "", MatchStatus.Running);
         loggingService.Received().InsertResettleLog(Arg.Any<SettleCriteria>(), Arg.Any<int>());
@@ -68,11 +86,17 @@ public class SettleServiceTests
     [Fact]
     public async Task SettleMatch_PassedValidateAndExistHedgeMatch_SettleBothMainAndHedgeMatch()
     {
+        var match = new Match
+        {
+            MatchId = 1,
+            ResultDetails = []
+        };
+
         createQueryService.QuerySettle(Arg.Is<Match>(m => m.MatchId == 1)).Returns(new SettleCriteria { MatchId = 1 });
         retryValidationService.ValidateEventTicket(Arg.Any<EventTicketRequest>()).Returns(new Result());
         repository.GetAsync<HedgeMatchDetail>(Arg.Any<GetHedgeMatchCriteria>()).Returns(new HedgeMatchDetail { MatchId = 2 });
 
-        await service.SettleMatch(new Match { MatchId = 1 });
+        await service.SettleMatch(match);
 
         await loggingService.Received().Update(Arg.Is<Match>(m => m.MatchId == 1), "", MatchStatus.Running);
         await scaleOutSettleService.Received(2).UpdateMatchInfo(Arg.Any<UpdateMatchInfoRequest>());

@@ -4,7 +4,7 @@ namespace AutoRefundOtherSports.Models;
 
 public class CheckOddsItem
 {
-    private readonly List<ResourceItem> resourceIdItems = new List<ResourceItem>();
+    private readonly List<ResourceItem> resourceIdItems = [];
 
     [XmlAttribute("MatchId")]
     public int MatchId { get; set; }
@@ -16,7 +16,7 @@ public class CheckOddsItem
         {
             ResourceIds.ForEach(item =>
             {
-                resourceIdItems.Add(new ResourceItem(item));
+                resourceIdItems.Add(new ResourceItem { ResourceId = item });
             });
             return resourceIdItems;
         }

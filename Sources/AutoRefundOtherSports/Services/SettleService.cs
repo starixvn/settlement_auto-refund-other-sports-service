@@ -8,35 +8,15 @@ public interface SettleService
     Task SettleMatch(Match match);
 }
 
-public class SettleServiceImp : SettleService
+public class SettleServiceImp(
+    CreateQueryService createQueryService,
+    IDynamicRepository repository,
+    ScaleOutSettleService scaleOutSettleService,
+    RetryValidationService retryValidationService,
+    LoggingService loggingService,
+    IOptions<AppSettingsKey> appSettingsKey)
+    : SettleService
 {
-    private readonly CreateQueryService createQueryService;
-
-    private readonly IDynamicRepository repository;
-
-    private readonly ScaleOutSettleService scaleOutSettleService;
-
-    private readonly RetryValidationService retryValidationService;
-
-    private readonly LoggingService loggingService;
-
-    private readonly AppSettingsKey appSettingsKey;
-
-    public SettleServiceImp(CreateQueryService createQueryService,
-        IDynamicRepository repository,
-        ScaleOutSettleService scaleOutSettleService,
-        RetryValidationService retryValidationService,
-        LoggingService loggingService,
-        IOptions<AppSettingsKey> appSettingsKey)
-    {
-        this.createQueryService = createQueryService;
-        this.repository = repository;
-        this.scaleOutSettleService = scaleOutSettleService;
-        this.retryValidationService = retryValidationService;
-        this.loggingService = loggingService;
-        this.appSettingsKey = appSettingsKey.Value;
-    }
-
     public async Task SettleMatch(Match match)
     {
         var criteria = createQueryService.QuerySettle(match);
@@ -64,7 +44,7 @@ public class SettleServiceImp : SettleService
 
             await ExecuteAsync(criteria);
             await loggingService.Update(match, string.Empty, MatchStatus.Completed);
-           
+
             await SettleHedgeMatch(match, criteria);
 
             await HandleRefundGameWinner(match, result);
@@ -149,7 +129,7 @@ public class SettleServiceImp : SettleService
 
     private async Task ExecuteAsync(SettleCriteria criteria)
     {
-        var servers = appSettingsKey.SiteDbServer;
+        var servers = appSettingsKey.Value.SiteDbServer;
         var tasks = servers.Select(server => ExecuteOneServer(criteria, server)).ToList();
         await Task.WhenAll(tasks);
     }
@@ -168,7 +148,7 @@ public class SettleServiceImp : SettleService
             criteria.MatchId = hedgeMatch.MatchId;
             criteria.BroadcastSessionId = Guid.NewGuid().ToString();
             await UpdateMatchInfo(criteria);
-           
+
             await ExecuteAsync(criteria);
 
             await loggingService.UpdateMatchStatus(new UpdateResultStatusCriteria

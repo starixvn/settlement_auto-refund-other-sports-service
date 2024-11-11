@@ -10,27 +10,15 @@ public interface RetryValidationService
     Task<Result> ValidateEventTicket(EventTicketRequest request);
 }
 
-public class RetryValidationServiceImp : RetryValidationService
+public class RetryValidationServiceImp(
+    VerificationStatusService verificationStatusService,
+    IOptions<AppSettingsKey> appSettingsKey,
+    ScaleOutSettleService scaleOutSettleService)
+    : RetryValidationService
 {
-    private readonly AppSettingsKey appSettingsKey;
-
-    private readonly VerificationStatusService verificationStatusService;
-
-    private readonly ScaleOutSettleService scaleOutSettleService;
-
-    public RetryValidationServiceImp(
-        VerificationStatusService verificationStatusService,
-        IOptions<AppSettingsKey> appSettingsKey,
-        ScaleOutSettleService scaleOutSettleService)
-    {
-        this.appSettingsKey = appSettingsKey.Value;
-        this.verificationStatusService = verificationStatusService;
-        this.scaleOutSettleService = scaleOutSettleService;
-    }
-
     public async Task<bool> IsCheckingOddsAndMarkedTicket(Match match)
     {
-        for (var i = 0; i <= appSettingsKey.RetryCount; i++)
+        for (var i = 0; i <= appSettingsKey.Value.RetryCount; i++)
         {
             var resultCheckingOdds = await verificationStatusService.CheckRunningOdds(match);
             if (resultCheckingOdds.ErrCode == 0 && !await verificationStatusService.IsExistMarkedTicket(match))
@@ -38,9 +26,9 @@ public class RetryValidationServiceImp : RetryValidationService
                 return true;
             }
 
-            if (i < appSettingsKey.RetryCount)
+            if (i < appSettingsKey.Value.RetryCount)
             {
-                await Task.Delay(appSettingsKey.RetryInterval);
+                await Task.Delay(appSettingsKey.Value.RetryInterval);
                 match.TryCount++;
             }
         }
@@ -50,12 +38,12 @@ public class RetryValidationServiceImp : RetryValidationService
 
     public async Task<Result> ValidateEventTicket(EventTicketRequest request)
     {
-        for (var i = 0; i <= appSettingsKey.RetryValidateCount; i++)
+        for (var i = 0; i <= appSettingsKey.Value.RetryValidateCount; i++)
         {
             var resultMessage = await scaleOutSettleService.ValidateEventAndTicket(request);
-            if (resultMessage.ErrorCode == ErrorCode.MatchInQueue && i < appSettingsKey.RetryValidateCount)
+            if (resultMessage.ErrorCode == ErrorCode.MatchInQueue && i < appSettingsKey.Value.RetryValidateCount)
             {
-                await Task.Delay(appSettingsKey.RetryValidate);
+                await Task.Delay(appSettingsKey.Value.RetryValidate);
                 continue;
             }
             return new Result

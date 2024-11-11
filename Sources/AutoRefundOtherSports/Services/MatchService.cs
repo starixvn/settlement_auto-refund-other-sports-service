@@ -11,28 +11,14 @@ public interface MatchService
     Task HandleAutoRefundException(Match match, AutoRefundException exception);
 }
 
-public class MatchServiceImp : MatchService
+public class MatchServiceImp(
+    IDynamicRepository repository,
+    ICache cache,
+    IOptions<AppSettingsKey> appSettingsKey,
+    LoggingService loggingService)
+    : MatchService
 {
-    private readonly IDynamicRepository repository;
-
-    private readonly ICache cache;
-
-    private readonly AppSettingsKey appSettingsKey;
-
-    private readonly LoggingService loggingService;
-
     private readonly List<int> listSport = [SportType.Volleyball, SportType.Badminton, SportType.Tennis, SportType.ESports, SportType.TableTennis, SportType.BaseBall];
-
-    public MatchServiceImp(IDynamicRepository repository,
-        ICache cache,
-        IOptions<AppSettingsKey> appSettingsKey,
-        LoggingService loggingService)
-    {
-        this.repository = repository;
-        this.cache = cache;
-        this.appSettingsKey = appSettingsKey.Value;
-        this.loggingService = loggingService;
-    }
 
     public async Task<List<Match>> GetMatches()
     {
@@ -43,7 +29,7 @@ public class MatchServiceImp : MatchService
 
         var leagueIds = (response ?? "").Split(",");
 
-        return appSettingsKey.EnvironmentName switch
+        return appSettingsKey.Value.EnvironmentName switch
         {
             "PRO" => leagueIds.Length > 0
                 ? matches.Where(m => !leagueIds.Contains(m.LeagueId.ToString())).ToList()

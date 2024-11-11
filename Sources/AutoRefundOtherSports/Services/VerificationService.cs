@@ -7,20 +7,17 @@ public interface VerificationService
     void VerifyResultRunning(Match match);
 
     Task VerifyResultStatus(Match match);
+
+    Task VerifyResultForGameWinner(Match match);
 }
 
-public class VerificationServiceImp : VerificationService
+public class VerificationServiceImp(
+    RetryValidationService retryValidationService,
+    VerificationStatusService verificationStatusService) : VerificationService
 {
     private const byte SettlementStatusCalculated = 4;
 
     private const byte ResultStatusUnCalculate = 4;
-
-    private readonly RetryValidationService retryValidationService;
-
-    public VerificationServiceImp(RetryValidationService retryValidationService)
-    {
-        this.retryValidationService = retryValidationService;
-    }
 
     public void VerifyResultRunning(Match match)
     {
@@ -37,6 +34,28 @@ public class VerificationServiceImp : VerificationService
         if (!isChecking)
         {
             throw new OddsAndMarkedTicketException();
+        }
+    }
+
+    public async Task VerifyResultForGameWinner(Match match)
+    {
+        var isExistMarkedTicket = await verificationStatusService.IsExistMarkedTicket(match);
+
+        if (isExistMarkedTicket)
+        {
+            throw new ChildMatchMarkedTicketException();
+        }
+
+        var (isExistTicket, isExistTicketSettled) = await verificationStatusService.IsTicketExisting(match);
+
+        if (!isExistTicket)
+        {
+            throw new MatchNoTicketException();
+        }
+
+        if (isExistTicketSettled)
+        {
+            throw new ChildMatchExistSettledTicket();
         }
     }
 }

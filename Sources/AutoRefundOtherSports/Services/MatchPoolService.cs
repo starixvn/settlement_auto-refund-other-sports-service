@@ -7,20 +7,11 @@ public interface MatchPoolService
     void RemoveMatch(Match match);
 }
 
-public class MatchPoolServiceImp : MatchPoolService
+public class MatchPoolServiceImp(MatchService matchService) : MatchPoolService
 {
-    private readonly MatchService matchService;
+    private readonly object lockObject = new();
 
-    private readonly object lockObject;
-
-    public MatchPoolServiceImp(MatchService matchService)
-    {
-        this.matchService = matchService;
-        PoolOfMatches = new List<Match>();
-        lockObject = new object();
-    }
-
-    public List<Match> PoolOfMatches { get; }
+    public List<Match> PoolOfMatches { get; } = [];
 
     public void RemoveMatch(Match match)
     {

@@ -6,7 +6,7 @@ public class AutoRefundControllerTests
 
     private readonly RefundController refundController;
 
-    private readonly AutoRefundController controller;
+    private readonly AutoRefundControllerImp controller;
 
     public AutoRefundControllerTests()
     {

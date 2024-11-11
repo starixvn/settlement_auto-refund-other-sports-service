@@ -14,7 +14,7 @@ public class VerificationStatusServiceTests
     {
         createQueryService = Substitute.For<CreateQueryService>();
         repository = Substitute.For<IDynamicRepository>();
-        var appSettingsOptions = Options.Create(new AppSettingsKey { SiteDbServer = new List<string> { "01", "02" } });
+        var appSettingsOptions = Options.Create(new AppSettingsKey { SiteDbServer = ["01", "02"] });
         service = new VerificationStatusServiceImp(createQueryService, repository, appSettingsOptions);
     }
 
@@ -37,10 +37,7 @@ public class VerificationStatusServiceTests
         var match = new Match
         {
             MatchId = 1,
-            ResultDetails = new List<ResultDetail>
-                {
-                    new ()
-                }
+            ResultDetails = [new()]
         };
         await repository.ExecuteAsync(Arg.Do<CheckMarkedTicketsCriteria>(item => item.IsExistMarkedTicket = true));
 
@@ -56,10 +53,7 @@ public class VerificationStatusServiceTests
         var match = new Match
         {
             MatchId = 1,
-            ResultDetails = new List<ResultDetail>
-            {
-                new ()
-            }
+            ResultDetails = [new()]
         };
         await repository.ExecuteAsync(Arg.Do<CheckMarkedTicketsCriteria>(item => item.IsExistMarkedTicket = false));
 

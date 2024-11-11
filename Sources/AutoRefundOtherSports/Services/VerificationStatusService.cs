@@ -9,24 +9,12 @@ public interface VerificationStatusService
     Task<(bool, bool)> IsTicketExisting(Match match);
 }
 
-public class VerificationStatusServiceImp : VerificationStatusService
+public class VerificationStatusServiceImp(
+    CreateQueryService createQueryService,
+    IDynamicRepository repository,
+    IOptions<AppSettingsKey> appSettingsKey)
+    : VerificationStatusService
 {
-    private readonly CreateQueryService createQueryService;
-
-    private readonly IDynamicRepository repository;
-
-    private readonly AppSettingsKey appSettingsKey;
-
-    public VerificationStatusServiceImp(
-        CreateQueryService createQueryService,
-        IDynamicRepository repository,
-        IOptions<AppSettingsKey> appSettingsKey)
-    {
-        this.createQueryService = createQueryService;
-        this.repository = repository;
-        this.appSettingsKey = appSettingsKey.Value;
-    }
-
     public async Task<CheckOddsCriteria> CheckRunningOdds(Match match)
     {
         var criteria = createQueryService.CreateQueryCheckOdds(match);
@@ -44,7 +32,7 @@ public class VerificationStatusServiceImp : VerificationStatusService
             ResourceIds = string.Join(",", match.ResultDetails.Select(item => item.ResourceId).ToList())
         };
 
-        foreach (var server in appSettingsKey.SiteDbServer)
+        foreach (var server in appSettingsKey.Value.SiteDbServer)
         {
             criteria.DbServer = server;
             await repository.ExecuteAsync(criteria);
@@ -64,13 +52,12 @@ public class VerificationStatusServiceImp : VerificationStatusService
             MatchId = match.MatchId
         };
 
-        var tasks = appSettingsKey.SiteDbServer.Select(s => GetTicketInfo(s, criteria));
+        var tasks = appSettingsKey.Value.SiteDbServer.Select(s => GetTicketInfo(s, criteria));
 
-        var ticketInfos = await Task.WhenAll(tasks.ToArray());
+        var ticketInfos = (await Task.WhenAll(tasks.ToArray())).ToList();
 
-
-        var isExistTicket = ticketInfos.Any(ticketInfo => ticketInfo.IsExistTicket);
-        var isExistTicketSettled = ticketInfos.Any(ticketInfo => ticketInfo.IsExistSettledTicket);
+        var isExistTicket = ticketInfos.Exists(ticketInfo => ticketInfo.IsExistTicket);
+        var isExistTicketSettled = ticketInfos.Exists(ticketInfo => ticketInfo.IsExistSettledTicket);
 
         return (isExistTicket, isExistTicketSettled);
     }
