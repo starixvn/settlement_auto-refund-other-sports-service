@@ -78,7 +78,7 @@ public class SettleServiceTests
         await service.SettleMatch(match);
 
         await loggingService.Received().Update(Arg.Any<Match>(), "", MatchStatus.Running);
-        loggingService.Received().InsertResettleLog(Arg.Any<SettleCriteria>(), Arg.Any<int>());
+        await loggingService.Received().InsertResettleLog(Arg.Any<SettleCriteria>(), Arg.Any<int>());
         await scaleOutSettleService.Received().UpdateMatchInfo(Arg.Any<UpdateMatchInfoRequest>());
         await repository.Received(2).ExecuteAsync(Arg.Any<SettleCriteria>());
     }

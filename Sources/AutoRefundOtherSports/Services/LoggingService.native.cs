@@ -7,15 +7,15 @@ public interface LoggingService
 {
     Task WriteLog(Match match, string message);
 
+    Task WriteLog(int matchId, string message);
+
     Task WriteLog(Match match, AutoRefundException exception);
 
     Task Update(Match match, string remark, int status);
 
     Task UpdateMatchStatus(UpdateResultStatusCriteria criteria);
 
-    void WriteLog(int matchId, string message);
-
-    void InsertResettleLog(SettleCriteria criteria, int sportType);
+    Task InsertResettleLog(SettleCriteria criteria, int sportType);
 }
 
 public class LoggingServiceImp(IDynamicRepository repository, CreateQueryService createQueryService)
@@ -61,21 +61,21 @@ public class LoggingServiceImp(IDynamicRepository repository, CreateQueryService
         return string.Join("<br/>", remark);
     }
 
-    public void InsertResettleLog(SettleCriteria criteria, int sportType)
+    public async Task InsertResettleLog(SettleCriteria criteria, int sportType)
     {
         try
         {
             var insertLogCriteria = new InsertLogCriteria(criteria, sportType);
 
-            repository.Execute(insertLogCriteria);
+            await repository.ExecuteAsync(insertLogCriteria);
         }
         catch (Exception e)
         {
-            LogService.Error("Fanex.AutoRefundOtherSports.Service(Write resettle Log): ", e);
+            await LogService.ErrorAsync("Fanex.AutoRefundOtherSports.Service(Write resettle Log): ", e);
         }
     }
 
-    public void WriteLog(int matchId, string message)
+    public async Task WriteLog(int matchId, string message)
     {
         try
         {
@@ -85,11 +85,11 @@ public class LoggingServiceImp(IDynamicRepository repository, CreateQueryService
                 Doing = message,
             };
 
-            repository.Execute(criteria);
+            await repository.ExecuteAsync(criteria);
         }
         catch (Exception e)
         {
-            LogService.Error("Fanex.AutoRefundOtherSports.Service(Write Log Directly): ", e);
+            await LogService.ErrorAsync("Fanex.AutoRefundOtherSports.Service(Write Log Directly): ", e);
         }
     }
 }

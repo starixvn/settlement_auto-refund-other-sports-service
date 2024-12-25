@@ -39,8 +39,8 @@ public class SettleServiceImp(
             await UpdateMatchInfo(criteria);
 
             var message = GenerateLogMessage(criteria);
-            loggingService.WriteLog(criteria.MatchId, message);
-            loggingService.InsertResettleLog(criteria, match.SportType);
+            await loggingService.WriteLog(criteria.MatchId, message);
+            await loggingService.InsertResettleLog(criteria, match.SportType);
 
             await ExecuteAsync(criteria);
             await loggingService.Update(match, string.Empty, MatchStatus.Completed);

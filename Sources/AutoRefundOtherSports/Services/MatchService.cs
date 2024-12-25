@@ -18,7 +18,15 @@ public class MatchServiceImp(
     LoggingService loggingService)
     : MatchService
 {
-    private readonly List<int> listSport = [SportType.Volleyball, SportType.Badminton, SportType.Tennis, SportType.ESports, SportType.TableTennis, SportType.BaseBall];
+    private readonly List<int> listSport =
+    [
+        SportType.Volleyball,
+        SportType.Badminton,
+        SportType.Tennis,
+        SportType.ESports,
+        SportType.TableTennis,
+        SportType.BaseBall
+    ];
 
     public async Task<List<Match>> GetMatches()
     {

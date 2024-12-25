@@ -1,24 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ApplicationIcon />
     <StartupObject />
     <CodeAnalysisRuleSet>AutoRefundOtherSports.ruleset</CodeAnalysisRuleSet>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Fanex.Caching.Redis.AspNetCore" Version="2.2.5" />
-    <PackageReference Include="Fanex.Data" Version="4.3.0.2" />
-    <PackageReference Include="Fanex.Data.Repository" Version="4.3.0.2" />
-    <PackageReference Include="Fanex.Logging" Version="2.0.1.1" />
-    <PackageReference Include="Fanex.Logging.Extensions" Version="1.0.6.1" />
-    <PackageReference Include="Fanex.Logging.Extensions.Database" Version="1.0.8" />
+    <PackageReference Include="Fanex.Data" Version="4.3.2" />
+    <PackageReference Include="Fanex.Data.Repository" Version="4.3.2" />
+    <PackageReference Include="Fanex.Logging" Version="2.0.2" />
+    <PackageReference Include="Fanex.Logging.Extensions" Version="1.1.0" />
+    <PackageReference Include="Fanex.Logging.Extensions.Database" Version="1.1.0" />
     <PackageReference Include="Fanex.Settlement.Converter" Version="1.0.0.1" />
     <PackageReference Include="Fanex.Settlement.ScaleOut" Version="1.4.6.1" />
-    <PackageReference Include="ONEbook.UM" Version="3.1.6" />
+    <PackageReference Include="ONEbook.UM" Version="3.1.8" />
   </ItemGroup>
-
 </Project>
