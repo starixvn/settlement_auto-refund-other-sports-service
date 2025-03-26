@@ -25,7 +25,8 @@ public class MatchServiceImp(
         SportType.Tennis,
         SportType.ESports,
         SportType.TableTennis,
-        SportType.BaseBall
+        SportType.BaseBall,
+        SportType.BeachVolleyball
     ];
 
     public async Task<List<Match>> GetMatches()

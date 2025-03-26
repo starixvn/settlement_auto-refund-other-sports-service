@@ -10,6 +10,8 @@ public static class SportType
 
     public const int ESports = 43;
 
+    public const int BeachVolleyball = 45;
+
     public const int TableTennis = 18;
 
     public const int BaseBall = 8;
