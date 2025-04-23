@@ -6,11 +6,13 @@ COPY ./Sources/Fanex.AutoRefundOtherSports.Service/Fanex.AutoRefundOtherSports.S
 
 WORKDIR /src/Fanex.AutoRefundOtherSports.Service
 RUN dotnet nuget add source https://nuget.nexdev.net/api/v2
-RUN dotnet restore -v n
+RUN --mount=type=cache,target=/root/.nuget/packages \
+	dotnet restore -v n
 
 COPY ./Sources/Fanex.AutoRefundOtherSports.Service .
 
-RUN dotnet publish -r linux-x64 --self-contained false -c Release -o /app 
+RUN --mount=type=cache,target=/root/.nuget/packages \
+	dotnet publish -r linux-x64 --self-contained false -c Release -o /app
 
 FROM hub.nexdev.net/base/dotnet/core/aspnet:9.0-alpine AS base
 
