@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Worker">
+<Project Sdk="Microsoft.NET.Sdk.Worker">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
@@ -21,6 +21,9 @@
     <Content Update="appsettings.PROD.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+<Content Update="appsettings.KLPROD.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Update="appsettings.SIT.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -32,17 +35,17 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="13.0.1" />
-    <PackageReference Include="Fanex.Caching" Version="2.2.7" />
+    <PackageReference Include="AutoMapper" Version="14.0.0" />
+    <PackageReference Include="Fanex.Caching" Version="2.2.8" />
     <PackageReference Include="Fanex.Caching.Redis.AspNetCore" Version="2.2.5" />
-    <PackageReference Include="Fanex.Data.SqlServer" Version="4.3.2" />
+    <PackageReference Include="Fanex.Data.SqlServer" Version="4.3.4" />
     <PackageReference Include="Fanex.Logging" Version="2.0.2" />
     <PackageReference Include="Fanex.Logging.Sentry.RavenClient" Version="2.0.2" />
-    <PackageReference Include="Fanex.Settlement.ScaleOut" Version="1.4.6.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.0" />
-    <PackageReference Include="ONEbook.UM" Version="3.1.8" />
+    <PackageReference Include="Fanex.Settlement.ScaleOut" Version="1.4.6.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.6" />
+    <PackageReference Include="ONEbook.UM" Version="3.2.5" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AutoRefundOtherSports\AutoRefundOtherSports.csproj" />

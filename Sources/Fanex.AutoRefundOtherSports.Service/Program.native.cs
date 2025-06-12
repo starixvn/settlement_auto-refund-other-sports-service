@@ -8,7 +8,7 @@ using ONEbook.UM.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOneBookUm(builder.Configuration);
+builder.Services.AddOneBookUmForService(builder.Configuration);
 
 builder.Services.AddFanexLogSentry(builder.Configuration);
 
