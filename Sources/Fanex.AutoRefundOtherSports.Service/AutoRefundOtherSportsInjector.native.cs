@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using AutoRefundOtherSports.Services;
+﻿using AutoRefundOtherSports.Services;
 using Fanex.Caching;
 using Fanex.Caching.Redis;
 using Fanex.Data.Repository;
@@ -44,14 +43,8 @@ public static class AutoRefundInjector
         services.AddSingleton<ICacheService>(new CacheService());
     }
 
-    public static void AddAutoMapper(this IServiceCollection service)
+    public static void AddAutoMapper(this IServiceCollection services)
     {
-        var mapperConfig = new MapperConfiguration(mc =>
-        {
-            mc.AddProfile(typeof(ScaleOutMappingProfile));
-        });
-
-        var mapper = mapperConfig.CreateMapper();
-        service.AddSingleton(mapper);
+        services.AddAutoMapper(cfg => cfg.AddProfile<ScaleOutMappingProfile>());
     }
 }

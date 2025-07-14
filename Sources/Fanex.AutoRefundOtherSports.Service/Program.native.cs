@@ -3,32 +3,29 @@ using Fanex.AutoRefundOtherSports.Service;
 using Fanex.Data.SqlServer;
 using Fanex.Logging.Sentry.RavenClient;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using ONEbook.UM.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
+var services = builder.Services;
+services.AddOneBookUmForService(builder.Configuration);
 
-builder.Services.AddOneBookUmForService(builder.Configuration);
+services.AddFanexLogSentry(builder.Configuration);
 
-builder.Services.AddFanexLogSentry(builder.Configuration);
+services.AddFanexSql(builder.Configuration);
 
-builder.Services.AddFanexSql(builder.Configuration);
+services.AddConfigRedisCache(builder.Configuration);
 
-builder.Services.AddConfigRedisCache(builder.Configuration);
+services.AddAutoMapper();
 
-builder.Services.AddAutoMapper();
+services.InitializeServices(builder.Configuration);
 
-builder.Services.InitializeServices(builder.Configuration);
+services.Configure<AppSettingsKey>(builder.Configuration);
 
-builder.Services.Configure<AppSettingsKey>(builder.Configuration);
-
-builder.Services.AddHostedService<Fanex.AutoRefundOtherSports.Service.AutoRefundOtherSports>();
+services.AddHostedService<Fanex.AutoRefundOtherSports.Service.AutoRefundOtherSports>();
+services.AddHealthChecks();
 
 var app = builder.Build();
 
-app.Run(async context =>
-{
-    await context.Response.WriteAsync("OK");
-});
+app.MapHealthChecks("/healthz");
 
 await app.RunAsync();

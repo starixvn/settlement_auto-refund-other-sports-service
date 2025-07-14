@@ -38,14 +38,14 @@
     <PackageReference Include="AutoMapper" Version="14.0.0" />
     <PackageReference Include="Fanex.Caching" Version="2.2.8" />
     <PackageReference Include="Fanex.Caching.Redis.AspNetCore" Version="2.2.5" />
-    <PackageReference Include="Fanex.Data.SqlServer" Version="4.3.4" />
+    <PackageReference Include="Fanex.Data.SqlServer" Version="4.3.4.3" />
     <PackageReference Include="Fanex.Logging" Version="2.0.2" />
     <PackageReference Include="Fanex.Logging.Sentry.RavenClient" Version="2.0.2" />
     <PackageReference Include="Fanex.Settlement.ScaleOut" Version="1.4.6.4" />
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.6" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.6" />
-    <PackageReference Include="ONEbook.UM" Version="3.2.5" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.7" />
+    <PackageReference Include="ONEbook.UM" Version="3.2.6" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AutoRefundOtherSports\AutoRefundOtherSports.csproj" />
