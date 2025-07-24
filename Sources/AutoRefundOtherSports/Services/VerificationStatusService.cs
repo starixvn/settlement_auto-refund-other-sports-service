@@ -4,8 +4,6 @@ public interface VerificationStatusService
 {
     Task<CheckOddsCriteria> CheckRunningOdds(Match match);
 
-    Task<bool> IsExistMarkedTicket(Match match);
-
     Task<(bool, bool)> IsTicketExisting(Match match);
 }
 
@@ -22,27 +20,6 @@ public class VerificationStatusServiceImp(
         await repository.ExecuteAsync(criteria);
 
         return criteria;
-    }
-
-    public async Task<bool> IsExistMarkedTicket(Match match)
-    {
-        var criteria = new CheckMarkedTicketsCriteria
-        {
-            MatchId = match.MatchId,
-            ResourceIds = string.Join(",", match.ResultDetails.Select(item => item.ResourceId).ToList())
-        };
-
-        foreach (var server in appSettingsKey.Value.SiteDbServer)
-        {
-            criteria.DbServer = server;
-            await repository.ExecuteAsync(criteria);
-            if (criteria.IsExistMarkedTicket)
-            {
-                return criteria.IsExistMarkedTicket;
-            }
-        }
-
-        return false;
     }
 
     public async Task<(bool, bool)> IsTicketExisting(Match match)

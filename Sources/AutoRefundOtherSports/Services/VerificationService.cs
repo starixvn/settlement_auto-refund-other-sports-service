@@ -39,13 +39,6 @@ public class VerificationServiceImp(
 
     public async Task VerifyResultForGameWinner(Match match)
     {
-        var isExistMarkedTicket = await verificationStatusService.IsExistMarkedTicket(match);
-
-        if (isExistMarkedTicket)
-        {
-            throw new ChildMatchMarkedTicketException();
-        }
-
         var (isExistTicket, isExistTicketSettled) = await verificationStatusService.IsTicketExisting(match);
 
         if (!isExistTicket)

@@ -21,7 +21,7 @@ public class RetryValidationServiceImp(
         for (var i = 0; i <= appSettingsKey.Value.RetryCount; i++)
         {
             var resultCheckingOdds = await verificationStatusService.CheckRunningOdds(match);
-            if (resultCheckingOdds.ErrCode == 0 && !await verificationStatusService.IsExistMarkedTicket(match))
+            if (resultCheckingOdds.ErrCode == 0)
             {
                 return true;
             }
